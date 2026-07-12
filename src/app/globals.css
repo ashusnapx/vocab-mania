@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+/* ============================================================
+   MATERIAL YOU (MD3) — Design Token System
+   Purple/Violet seed (#6750A4)
+   ============================================================ */
+
+@theme inline {
+  /* ---------- COLOR PALETTE ---------- */
+  --color-md-background: #fffbfe;
+  --color-md-on-background: #1c1b1f;
+  --color-md-primary: #6750a4;
+  --color-md-on-primary: #ffffff;
+  --color-md-primary-container: #eaddff;
+  --color-md-on-primary-container: #21005d;
+  --color-md-secondary: #625b71;
+  --color-md-on-secondary: #ffffff;
+  --color-md-secondary-container: #e8def8;
+  --color-md-on-secondary-container: #1d192b;
+  --color-md-tertiary: #7d5260;
+  --color-md-on-tertiary: #ffffff;
+  --color-md-tertiary-container: #ffd8e4;
+  --color-md-on-tertiary-container: #31111d;
+  --color-md-surface: #fffbfe;
+  --color-md-on-surface: #1c1b1f;
+  --color-md-surface-variant: #e7e0ec;
+  --color-md-on-surface-variant: #49454f;
+  --color-md-surface-container: #f3edf7;
+  --color-md-surface-container-low: #ece6f0;
+  --color-md-surface-container-high: #f0eaf4;
+  --color-md-surface-container-highest: #e6e0e9;
+  --color-md-outline: #79747e;
+  --color-md-outline-variant: #cac4d0;
+
+  /* ---------- FONTS ---------- */
+  --font-md: var(--font-roboto), "Roboto", ui-sans-serif, system-ui, sans-serif;
+
+  /* ---------- TYPE SCALE ---------- */
+  --text-display-lg: 56px;
+  --text-headline-lg: 48px;
+  --text-headline-md: 32px;
+  --text-title-lg: 24px;
+  --text-body-lg: 20px;
+  --text-body: 16px;
+  --text-label-md: 14px;
+  --text-label-sm: 12px;
+
+  /* ---------- LINE HEIGHTS ---------- */
+  --leading-display: 1.12;
+  --leading-headline: 1.25;
+  --leading-title: 1.3;
+  --leading-body: 1.5;
+  --leading-label: 1.4;
+
+  /* ---------- SPACING ---------- */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+  --spacing-20: 80px;
+  --spacing-24: 96px;
+
+  /* ---------- BORDER RADIUS ---------- */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --radius-2xl: 32px;
+  --radius-3xl: 48px;
+  --radius-full: 9999px;
+
+  /* ---------- SHADOWS ---------- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.12), 0 16px 48px rgba(0, 0, 0, 0.12);
+
+  /* ---------- LAYOUT ---------- */
+  --page-max-width: 1200px;
+  --section-gap: 64px;
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-md);
+  color: var(--color-md-on-background);
+  background: var(--color-md-background);
+  line-height: 1.5;
+}
+
+::selection {
+  background: var(--color-md-primary-container);
+  color: var(--color-md-on-primary-container);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   SECTION CONTAINER
+   ============================================================ */
+
+.section-wrap {
+  max-width: var(--page-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+@media (min-width: 640px) {
+  .section-wrap {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-wrap {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
