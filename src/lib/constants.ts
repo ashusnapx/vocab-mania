@@ -6,14 +6,17 @@ export const APP_NAME = "Vocab Mania";
 export const APP_DESCRIPTION =
   "The smarter way to build vocabulary for SSC, CAT, and competitive exams.";
 
+// ---------- NAVIGATION ----------
 export const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Pricing", href: "#pricing" },
+  { label: "FAQ", href: "#faq" },
 ] as const;
 
 export const NAV_CTA = { label: "Get started", href: "/signup" };
 
+// ---------- HERO ----------
 export const HERO = {
   tag: "AI-Powered Vocabulary Learning",
   headline: "Master every word, ace every exam.",
@@ -22,8 +25,41 @@ export const HERO = {
   primaryCta: { label: "Start learning free", href: "/signup" },
   secondaryCta: { label: "See how it works", href: "#how-it-works" },
   info: "Free for the first 200 words. No credit card required.",
+  floatingWords: [
+    { word: "Ephemeral", meaning: "शब्द — short-lived" },
+    { word: "Ubiquitous", meaning: "हर जगह — everywhere" },
+    { word: "Pragmatic", meaning: "व्यावहारिक — practical" },
+    { word: "Eloquent", meaning: "वाक्पटु — fluent" },
+    { word: "Resilient", meaning: "लचीला — strong" },
+    { word: "Ephemeral", meaning: "क्षणभंगुर — fleeting" },
+    { word: "Ubiquitous", meaning: "सर्वव्यापी — omnipresent" },
+    { word: "Pragmatic", meaning: "यथार्थवादी — realist" },
+    { word: "Ambiguous", meaning: "अस्पष्ट — unclear" },
+    { word: "Benevolent", meaning: "दयालु — kind" },
+    { word: "Candid", meaning: "स्पष्टवादी — frank" },
+    { word: "Diligent", meaning: "परिश्रमी — hardworking" },
+    { word: "Eloquent", meaning: "वाग्मिता — oratory" },
+    { word: "Gregarious", meaning: "मिलनसार — sociable" },
+    { word: "Tenacious", meaning: "दृढ़ — persistent" },
+    { word: "Verbose", meaning: "वाचाल — wordy" },
+  ],
 };
 
+// ---------- SOCIAL PROOF ----------
+export const SOCIAL_PROOF = {
+  tag: "Trusted by aspirants",
+  exams: [
+    { name: "SSC CGL", icon: "📝" },
+    { name: "SSC CHSL", icon: "📋" },
+    { name: "CAT", icon: "🎓" },
+    { name: "GRE", icon: "🌍" },
+    { name: "UPSC", icon: "🏛️" },
+    { name: "Bank PO", icon: "🏦" },
+  ],
+  stats: { rating: "4.9", reviews: "2,400+", platform: "Play Store" },
+};
+
+// ---------- FEATURES ----------
 export const FEATURES = {
   tag: "Features",
   headline: "Everything you need to own every word",
@@ -75,6 +111,7 @@ export const FEATURES = {
   ],
 };
 
+// ---------- HOW IT WORKS ----------
 export const HOW_IT_WORKS = {
   tag: "How It Works",
   headline: "Three steps to word mastery",
@@ -86,36 +123,159 @@ export const HOW_IT_WORKS = {
       title: "Choose your exam",
       description:
         "Pick SSC CGL, CAT, GRE, or any competitive exam. We load the most relevant word lists instantly.",
+      icon: "touch_app",
     },
     {
       number: "02",
       title: "Learn with AI",
       description:
         "Each word comes with a mnemonic, usage examples, and etymology. Our AI adapts explanations to how you think.",
+      icon: "psychology",
     },
     {
       number: "03",
       title: "Master through repetition",
       description:
         "The engine schedules revisions at the perfect interval. You review fewer words but remember more of them.",
+      icon: "trending_up",
     },
   ],
 };
 
-export const TESTIMONIAL = {
-  quote:
-    "I went from knowing 200 words to 800 in six weeks. The mnemonics are absurdly effective — I still remember 'ephemeral' because of the story it gave me.",
-  author: "Priya Sharma",
-  role: "SSC CGL 2025 — Rank 34",
+// ---------- WORD OF THE DAY ----------
+export const WORD_OF_THE_DAY = {
+  tag: "Word of the Day",
+  word: "Ephemeral",
+  pronunciation: "/ɪˈfɛm(ə)r(ə)l/",
+  partOfSpeech: "adjective",
+  definition: "Lasting for a very short time.",
+  example:
+    "The ephemeral beauty of cherry blossoms reminds us to appreciate the present moment.",
+  mnemonic: "Think: 'Epi-phon' — a phone call that ends quickly. Something ephemeral doesn't last.",
 };
 
+// ---------- STATS ----------
 export const STATS = [
-  { label: "Words mastered", value: "12,400+", delta: "across all users" },
-  { label: "Active learners", value: "8,200+", delta: "this month" },
-  { label: "Avg. retention", value: "94%", delta: "after 30 days" },
-  { label: "Exams covered", value: "24", delta: "and growing" },
+  { label: "Words mastered", value: 12400, suffix: "+", delta: "across all users" },
+  { label: "Active learners", value: 8200, suffix: "+", delta: "this month" },
+  { label: "Avg. retention", value: 94, suffix: "%", delta: "after 30 days" },
+  { label: "Exams covered", value: 24, suffix: "", delta: "and growing" },
 ];
 
+// ---------- TESTIMONIALS ----------
+export const TESTIMONIALS = [
+  {
+    quote:
+      "I went from knowing 200 words to 800 in six weeks. The mnemonics are absurdly effective — I still remember 'ephemeral' because of the story it gave me.",
+    author: "Priya Sharma",
+    role: "SSC CGL 2025 — Rank 34",
+    rating: 5,
+  },
+  {
+    quote:
+      "The adaptive quizzes changed everything. I used to waste time on words I already knew. Now every minute of study counts.",
+    author: "Arjun Mehta",
+    role: "CAT 2025 — 99.2 percentile",
+    rating: 5,
+  },
+  {
+    quote:
+      "I recommended Vocab Mania to my entire batch. The PYQ word lists are gold — most of the vocabulary section felt like revision.",
+    author: "Kavya Nair",
+    role: "UPSC 2024 — AIR 112",
+    rating: 5,
+  },
+];
+
+// ---------- PRICING ----------
+export const PRICING = {
+  tag: "Pricing",
+  headline: "Simple, transparent pricing",
+  subhead: "Start free. Upgrade when you're ready to go all in.",
+  tiers: [
+    {
+      name: "Free",
+      price: "₹0",
+      period: "forever",
+      description: "Perfect for getting started",
+      features: [
+        "200 words",
+        "Basic spaced repetition",
+        "1 exam word list",
+        "Community access",
+      ],
+      cta: { label: "Get started", href: "/signup" },
+      highlighted: false,
+    },
+    {
+      name: "Pro",
+      price: "₹199",
+      period: "/month",
+      description: "For serious aspirants",
+      features: [
+        "Unlimited words",
+        "AI mnemonics",
+        "All 24 exam lists",
+        "Adaptive quizzes",
+        "Mastery dashboard",
+        "Priority support",
+      ],
+      cta: { label: "Start free trial", href: "/signup?plan=pro" },
+      highlighted: true,
+    },
+    {
+      name: "Team",
+      price: "₹499",
+      period: "/month",
+      description: "For coaching institutes",
+      features: [
+        "Everything in Pro",
+        "Up to 50 students",
+        "Teacher dashboard",
+        "Custom word lists",
+        "Progress reports",
+        "API access",
+      ],
+      cta: { label: "Contact sales", href: "/contact" },
+      highlighted: false,
+    },
+  ],
+};
+
+// ---------- FAQ ----------
+export const FAQ = {
+  tag: "FAQ",
+  headline: "Frequently asked questions",
+  items: [
+    {
+      question: "How does the spaced repetition algorithm work?",
+      answer:
+        "Our algorithm is based on the SM-2 system, enhanced with machine learning. It tracks how well you know each word and schedules reviews at the exact moment you're about to forget. This means you spend less time reviewing and more time learning new words.",
+    },
+    {
+      question: "What exams do you cover?",
+      answer:
+        "We cover 24 competitive exams including SSC CGL, SSC CHSL, CAT, GRE, UPSC, Bank PO, RBI Grade B, and more. Each exam has a curated word list based on previous year papers and frequency analysis.",
+    },
+    {
+      question: "Can I use Vocab Mania offline?",
+      answer:
+        "Yes! Our mobile app supports full offline mode. Download your word lists and study anywhere — the app syncs your progress when you're back online.",
+    },
+    {
+      question: "How accurate are the AI mnemonics?",
+      answer:
+        "Our AI generates mnemonics that are contextually relevant, easy to remember, and personalized to your learning patterns. Users report 94% retention rate after 30 days — significantly higher than traditional methods.",
+    },
+    {
+      question: "Is there a free trial for the Pro plan?",
+      answer:
+        "Yes! The free plan gives you access to 200 words and basic features forever. When you're ready for more, Pro comes with a 7-day free trial — no credit card required.",
+    },
+  ],
+};
+
+// ---------- CTA ----------
 export const CTA = {
   headline: "Start mastering vocabulary today",
   body: "Join 8,200+ aspirants building word power with spaced repetition, AI mnemonics, and adaptive quizzes.",
@@ -124,6 +284,7 @@ export const CTA = {
   info: "Free for the first 200 words.",
 };
 
+// ---------- FOOTER ----------
 export const FOOTER = {
   tagline: "Built for aspirants who take vocabulary seriously.",
   columns: [
