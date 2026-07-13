@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
 import { useUser } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  useProfile,
+  useUpdateProfile,
+  useClearAllData,
+  useExportData,
+} from "@/lib/queries";
 import {
   ArrowLeft,
   LogOut,
@@ -20,80 +25,54 @@ import {
   Flame,
   Loader2,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 const GOALS = [5, 10, 15, 20, 25, 30];
 
-interface Profile {
-  full_name: string | null;
-  email: string | null;
-  avatar_url: string | null;
-  auth_provider: string;
-  daily_goal: number;
-  created_at: string;
-  current_streak: number;
-  longest_streak: number;
-}
-
 export default function SettingsPage() {
-  const { user, loading } = useUser();
+  const { user, loading: authLoading } = useUser();
   const router = useRouter();
   const supabase = createClient();
 
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const { data: profile, isLoading: profileLoading } = useProfile(user?.id);
+  const updateProfile = useUpdateProfile(user?.id);
+  const clearAllData = useClearAllData(user?.id);
+  const exportData = useExportData(user?.id);
+
   const [dailyGoal, setDailyGoal] = useState(10);
-  const [saving, setSaving] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("theme") === "dark";
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [clearing, setClearing] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-      return;
-    }
-    if (!user) return;
+  // Sync daily goal from profile
+  const profileGoal = profile?.daily_goal;
+  const currentGoal = profileGoal ?? dailyGoal;
 
-    const fetchProfile = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      if (data) {
-        setProfile(data);
-        setDailyGoal(data.daily_goal);
-      }
-    };
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <Loader2 size={20} className="text-primary animate-spin" />
+      </div>
+    );
+  }
 
-    fetchProfile();
-  }, [user, loading, supabase, router]);
-
-  // Sync dark mode class to document
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-  }, [darkMode]);
+  if (!user) {
+    router.push("/login");
+    return null;
+  }
 
   const showSaved = (field: string) => {
     setSaved(field);
     setTimeout(() => setSaved(null), 1500);
   };
 
-  const handleGoalChange = async (goal: number) => {
-    if (!user || goal === dailyGoal) return;
-    setSaving(true);
+  const handleGoalChange = (goal: number) => {
     setDailyGoal(goal);
-    await supabase
-      .from("profiles")
-      .update({ daily_goal: goal, updated_at: new Date().toISOString() })
-      .eq("id", user.id);
-    setSaving(false);
+    updateProfile.mutate({ daily_goal: goal });
     showSaved("goal");
   };
 
@@ -106,22 +85,8 @@ export default function SettingsPage() {
   };
 
   const handleExport = async () => {
-    if (!user) return;
-    setExporting(true);
-
-    const [progress, vault, sessions] = await Promise.all([
-      supabase.from("user_progress").select("*").eq("user_id", user.id),
-      supabase.from("memory_vault").select("*").eq("user_id", user.id),
-      supabase.from("learning_sessions").select("*").eq("user_id", user.id),
-    ]);
-
-    const data = {
-      exported_at: new Date().toISOString(),
-      profile: profile,
-      progress: progress.data,
-      vault: vault.data,
-      sessions: sessions.data,
-    };
+    const data = await exportData.mutateAsync();
+    if (!data) return;
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -130,47 +95,20 @@ export default function SettingsPage() {
     a.download = `vocab-mania-export-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-
-    setExporting(false);
     showSaved("export");
   };
 
-  const handleClearProgress = async () => {
-    if (!user) return;
-    setClearing(true);
-
-    await Promise.all([
-      supabase.from("user_progress").delete().eq("user_id", user.id),
-      supabase.from("memory_vault").delete().eq("user_id", user.id),
-      supabase.from("learning_sessions").delete().eq("user_id", user.id),
-      supabase.from("session_words").delete().eq("user_id", user.id),
-      supabase.from("profiles").update({
-        current_streak: 0,
-        longest_streak: 0,
-        last_active_date: null,
-        updated_at: new Date().toISOString(),
-      }).eq("id", user.id),
-    ]);
-
-    setClearing(false);
-    setShowClearConfirm(false);
-    showSaved("clear");
+  const handleClearProgress = () => {
+    clearAllData.mutate(undefined, {
+      onSuccess: () => {
+        setShowClearConfirm(false);
+        showSaved("clear");
+      },
+    });
   };
 
   const handleDeleteAccount = async () => {
-    if (!user) return;
-    setDeleting(true);
-
-    // Delete all user data first
-    await Promise.all([
-      supabase.from("user_progress").delete().eq("user_id", user.id),
-      supabase.from("memory_vault").delete().eq("user_id", user.id),
-      supabase.from("learning_sessions").delete().eq("user_id", user.id),
-      supabase.from("session_words").delete().eq("user_id", user.id),
-      supabase.from("profiles").delete().eq("id", user.id),
-    ]);
-
-    // Sign out
+    await clearAllData.mutateAsync();
     await supabase.auth.signOut();
     router.push("/");
   };
@@ -180,18 +118,12 @@ export default function SettingsPage() {
     router.push("/");
   };
 
-  if (loading || !profile) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <Loader2 size={20} className="text-primary animate-spin" />
-      </div>
-    );
-  }
-
-  const memberSince = new Date(profile.created_at).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })
+    : "";
 
   return (
     <div className="min-h-screen bg-surface">
@@ -199,7 +131,7 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <Link
-            href="/dashboard"
+            href="/progress"
             className="flex items-center gap-1.5 text-[13px] text-outline hover:text-on-surface transition-colors"
           >
             <ArrowLeft size={14} />
@@ -210,14 +142,11 @@ export default function SettingsPage() {
 
         {/* ============ PROFILE ============ */}
         <div className="card-surface overflow-hidden mb-6">
-          {/* Banner accent */}
           <div className="h-1.5 bg-gradient-to-r from-primary via-secondary to-tertiary" />
-
           <div className="p-6">
             <div className="flex items-start gap-4">
-              {/* Avatar */}
               <div className="relative">
-                {profile.avatar_url ? (
+                {profile?.avatar_url ? (
                   <img
                     src={profile.avatar_url}
                     alt=""
@@ -226,7 +155,7 @@ export default function SettingsPage() {
                 ) : (
                   <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
                     <span className="font-display text-[24px] font-semibold text-primary">
-                      {(profile.full_name || profile.email || "U")[0].toUpperCase()}
+                      {(profile?.full_name || profile?.email || "U")[0].toUpperCase()}
                     </span>
                   </div>
                 )}
@@ -234,17 +163,15 @@ export default function SettingsPage() {
                   <Check size={10} className="text-on-primary" />
                 </div>
               </div>
-
-              {/* Info */}
               <div className="flex-1 min-w-0">
                 <h2 className="font-display text-[18px] font-semibold text-on-surface truncate">
-                  {profile.full_name || "User"}
+                  {profile?.full_name || "User"}
                 </h2>
-                <p className="text-[13px] text-outline truncate">{profile.email}</p>
+                <p className="text-[13px] text-outline truncate">{profile?.email}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
                     <Shield size={10} />
-                    {profile.auth_provider === "google" ? "Google" : "Email"}
+                    {profile?.auth_provider === "google" ? "Google" : "Email"}
                   </span>
                   <span className="text-[11px] text-outline">
                     Member since {memberSince}
@@ -252,14 +179,12 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
-
-            {/* Quick stats row */}
             <div className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-outline-variant/30">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1 mb-0.5">
                   <Flame size={12} className="text-red-500" />
                   <span className="font-display text-[16px] font-bold text-on-surface">
-                    {profile.current_streak}
+                    {profile?.current_streak || 0}
                   </span>
                 </div>
                 <p className="text-[11px] text-outline">Streak</p>
@@ -268,7 +193,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-center gap-1 mb-0.5">
                   <Flame size={12} className="text-tertiary" />
                   <span className="font-display text-[16px] font-bold text-on-surface">
-                    {profile.longest_streak}
+                    {profile?.longest_streak || 0}
                   </span>
                 </div>
                 <p className="text-[11px] text-outline">Best</p>
@@ -277,7 +202,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-center gap-1 mb-0.5">
                   <Target size={12} className="text-primary" />
                   <span className="font-display text-[16px] font-bold text-on-surface">
-                    {dailyGoal}
+                    {currentGoal}
                   </span>
                 </div>
                 <p className="text-[11px] text-outline">Goal/day</p>
@@ -292,7 +217,6 @@ export default function SettingsPage() {
             Learning
           </h3>
           <div className="card-surface divide-y divide-outline-variant/20">
-            {/* Daily Goal */}
             <div className="p-5">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
@@ -315,15 +239,15 @@ export default function SettingsPage() {
                   <button
                     key={goal}
                     onClick={() => handleGoalChange(goal)}
-                    disabled={saving}
+                    disabled={updateProfile.isPending}
                     className={`relative py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
-                      dailyGoal === goal
+                      currentGoal === goal
                         ? "bg-primary text-on-primary shadow-sm"
                         : "bg-surface-hover text-outline hover:text-on-surface hover:bg-surface-container"
                     }`}
                   >
                     {goal}
-                    {dailyGoal === goal && (
+                    {currentGoal === goal && (
                       <div className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-primary flex items-center justify-center ring-2 ring-surface">
                         <Check size={8} className="text-on-primary" />
                       </div>
@@ -332,14 +256,12 @@ export default function SettingsPage() {
                 ))}
               </div>
               <p className="text-[12px] text-outline mt-2.5">
-                {dailyGoal <= 5 && "~10 min/day — gentle start"}
-                {dailyGoal > 5 && dailyGoal <= 10 && "~15 min/day — steady pace"}
-                {dailyGoal > 10 && dailyGoal <= 20 && "~25 min/day — serious learner"}
-                {dailyGoal > 20 && "~35+ min/day — intensive"}
+                {currentGoal <= 5 && "~10 min/day — gentle start"}
+                {currentGoal > 5 && currentGoal <= 10 && "~15 min/day — steady pace"}
+                {currentGoal > 10 && currentGoal <= 20 && "~25 min/day — serious learner"}
+                {currentGoal > 20 && "~35+ min/day — intensive"}
               </p>
             </div>
-
-            {/* Words seen */}
             <div className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -352,7 +274,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <span className="text-[13px] text-outline bg-surface-hover px-3 py-1 rounded-lg">
-                  {Math.min(dailyGoal, 20)} words
+                  {Math.min(currentGoal, 20)} words
                 </span>
               </div>
             </div>
@@ -408,10 +330,9 @@ export default function SettingsPage() {
             Data
           </h3>
           <div className="card-surface divide-y divide-outline-variant/20">
-            {/* Export */}
             <button
               onClick={handleExport}
-              disabled={exporting}
+              disabled={exportData.isPending}
               className="w-full p-5 flex items-center justify-between hover:bg-surface-hover/50 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5">
@@ -423,7 +344,7 @@ export default function SettingsPage() {
                   <p className="text-[12px] text-outline">Download all your data as JSON</p>
                 </div>
               </div>
-              {exporting ? (
+              {exportData.isPending ? (
                 <Loader2 size={16} className="text-outline animate-spin" />
               ) : saved === "export" ? (
                 <span className="text-[12px] text-secondary font-medium flex items-center gap-1">
@@ -433,8 +354,6 @@ export default function SettingsPage() {
                 <ChevronRight size={16} className="text-outline" />
               )}
             </button>
-
-            {/* Clear Progress */}
             <div className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -453,7 +372,6 @@ export default function SettingsPage() {
                   Clear
                 </button>
               </div>
-
               {showClearConfirm && (
                 <div className="mt-4 p-4 rounded-xl bg-red-500/5 border border-red-500/10">
                   <p className="text-[13px] text-on-surface mb-3">
@@ -468,10 +386,10 @@ export default function SettingsPage() {
                     </button>
                     <button
                       onClick={handleClearProgress}
-                      disabled={clearing}
+                      disabled={clearAllData.isPending}
                       className="flex-1 h-9 rounded-lg bg-red-500 text-[13px] font-medium text-on-primary hover:bg-red-600 transition-colors flex items-center justify-center gap-1.5"
                     >
-                      {clearing ? (
+                      {clearAllData.isPending ? (
                         <Loader2 size={14} className="animate-spin" />
                       ) : (
                         "Yes, clear everything"
@@ -480,7 +398,6 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
-
               {saved === "clear" && (
                 <p className="text-[12px] text-secondary font-medium mt-2 flex items-center gap-1">
                   <Check size={12} /> Progress cleared
@@ -496,7 +413,6 @@ export default function SettingsPage() {
             Account
           </h3>
           <div className="card-surface divide-y divide-outline-variant/20">
-            {/* Sign Out */}
             <button
               onClick={handleSignOut}
               className="w-full p-5 flex items-center gap-2.5 hover:bg-surface-hover/50 transition-colors text-left"
@@ -509,8 +425,6 @@ export default function SettingsPage() {
                 <p className="text-[12px] text-outline">Sign out of your account</p>
               </div>
             </button>
-
-            {/* Delete Account */}
             <div className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -529,7 +443,6 @@ export default function SettingsPage() {
                   Delete
                 </button>
               </div>
-
               {showDeleteConfirm && (
                 <div className="mt-4 p-4 rounded-xl bg-red-500/5 border border-red-500/10">
                   <p className="text-[13px] text-on-surface mb-3">
@@ -544,10 +457,10 @@ export default function SettingsPage() {
                     </button>
                     <button
                       onClick={handleDeleteAccount}
-                      disabled={deleting}
+                      disabled={clearAllData.isPending}
                       className="flex-1 h-9 rounded-lg bg-red-500 text-[13px] font-medium text-on-primary hover:bg-red-600 transition-colors flex items-center justify-center gap-1.5"
                     >
-                      {deleting ? (
+                      {clearAllData.isPending ? (
                         <Loader2 size={14} className="animate-spin" />
                       ) : (
                         "Yes, delete account"

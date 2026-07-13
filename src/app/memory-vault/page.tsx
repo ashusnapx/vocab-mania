@@ -1,65 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
 import { useUser } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { WORD_DATABASE } from "@/lib/words";
-import { Star, Trash2, Search, ArrowLeft, Shuffle } from "lucide-react";
+import { useVault, useRemoveFromVault } from "@/lib/queries";
+import { Star, Trash2, Search, ArrowLeft, Shuffle, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-interface VaultEntry {
-  word_id: string;
-  created_at: string;
-}
-
 export default function MemoryVaultPage() {
-  const { user, loading } = useUser();
+  const { user, loading: authLoading } = useUser();
   const router = useRouter();
-  const supabase = createClient();
-  const [vaultEntries, setVaultEntries] = useState<VaultEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [removing, setRemoving] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-      return;
-    }
-    if (!user) return;
+  const { data: vaultEntries = [], isLoading } = useVault(user?.id);
+  const removeMutation = useRemoveFromVault(user?.id);
 
-    const fetchVault = async () => {
-      const { data } = await supabase
-        .from("memory_vault")
-        .select("word_id, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+  if (authLoading || isLoading) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <Loader2 size={20} className="text-primary animate-spin" />
+      </div>
+    );
+  }
 
-      setVaultEntries(data || []);
-    };
+  if (!user) {
+    router.push("/login");
+    return null;
+  }
 
-    fetchVault();
-  }, [user, loading, supabase, router]);
-
-  const removeWord = async (wordId: string) => {
-    if (!user) return;
-    setRemoving(wordId);
-    await supabase
-      .from("memory_vault")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("word_id", wordId);
-    setVaultEntries((prev) => prev.filter((e) => e.word_id !== wordId));
-    setRemoving(null);
-  };
-
-  const vaultWords = vaultEntries
-    .map((entry) => ({
+  type VaultEntry = { word_id: string; added_at: string; word: typeof WORD_DATABASE[number] | undefined };
+  const vaultWords: VaultEntry[] = vaultEntries
+    .map((entry: { word_id: string; added_at: string }) => ({
       ...entry,
       word: WORD_DATABASE.find((w) => w.id === entry.word_id),
     }))
-    .filter((e) => e.word)
-    .filter((e) =>
+    .filter((e: VaultEntry) => e.word)
+    .filter((e: VaultEntry) =>
       searchQuery
         ? e.word!.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
           e.word!.hindiMeaning.includes(searchQuery) ||
@@ -67,17 +44,9 @@ export default function MemoryVaultPage() {
         : true
     );
 
-  const handleReviewVault = () => {
-    router.push(`/learn?vault=true`);
+  const handleRemove = (wordId: string) => {
+    removeMutation.mutate(wordId);
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="text-[14px] text-outline">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-surface">
@@ -85,7 +54,7 @@ export default function MemoryVaultPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <Link
-            href="/dashboard"
+            href="/progress"
             className="flex items-center gap-1.5 text-[13px] text-outline hover:text-on-surface transition-colors"
           >
             <ArrowLeft size={14} />
@@ -107,13 +76,13 @@ export default function MemoryVaultPage() {
               <p className="text-[13px] text-outline">words saved for special review</p>
             </div>
             {vaultEntries.length > 0 && (
-              <button
-                onClick={handleReviewVault}
+              <Link
+                href="/learn?vault=true"
                 className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-tertiary text-[13px] font-medium text-on-tertiary hover:bg-tertiary-hover transition-all"
               >
                 <Shuffle size={14} />
                 Review Vault
-              </button>
+              </Link>
             )}
           </div>
         </div>
@@ -179,8 +148,8 @@ export default function MemoryVaultPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => removeWord(entry.word_id)}
-                  disabled={removing === entry.word_id}
+                  onClick={() => handleRemove(entry.word_id)}
+                  disabled={removeMutation.isPending}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl hover:bg-red-500/10 text-outline hover:text-red-500 transition-all disabled:opacity-40"
                 >
                   <Trash2 size={14} />

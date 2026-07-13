@@ -33,7 +33,6 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isProtectedRoute = [
-    "/dashboard",
     "/learn",
     "/progress",
     "/memory-vault",

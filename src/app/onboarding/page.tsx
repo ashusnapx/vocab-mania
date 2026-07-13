@@ -36,7 +36,7 @@ export default function OnboardingPage() {
       onboarding_completed: true,
     });
 
-    router.push("/dashboard");
+    router.push("/progress");
   };
 
   if (loading || !user) {

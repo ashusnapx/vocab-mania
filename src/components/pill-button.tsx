@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useUser } from "@/lib/auth-context";
 
 type PillButtonProps = {
   label: string;
@@ -20,18 +23,33 @@ const sizes = {
   lg: "h-12 px-8 text-[16px]",
 };
 
+const AUTH_ROUTES = ["/signup", "/login", "/forgot-password"];
+
 export function PillButton({
   label,
   href,
   variant = "filled",
   size = "md",
 }: PillButtonProps) {
+  const { user } = useUser();
+
+  // If logged in and pointing to an auth page, redirect to dashboard
+  const resolvedHref = user && AUTH_ROUTES.includes(href) ? "/progress" : href;
+
+  // If logged in, change label for auth CTAs
+  const resolvedLabel =
+    user && href === "/signup"
+      ? "Go to Progress"
+      : user && href === "/login"
+        ? "Go to Progress"
+        : label;
+
   return (
     <Link
-      href={href}
+      href={resolvedHref}
       className={`inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-95 ${variants[variant]} ${sizes[size]}`}
     >
-      {label}
+      {resolvedLabel}
     </Link>
   );
 }

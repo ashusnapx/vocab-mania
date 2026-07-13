@@ -16,6 +16,7 @@ create table public.profiles (
   auth_provider text default 'email' check (auth_provider in ('email', 'google')),
   onboarding_completed boolean default false,
   daily_goal integer default 10 check (daily_goal between 5 and 50),
+  xp integer default 0,
   current_streak integer default 0,
   longest_streak integer default 0,
   last_active_date date,
@@ -145,6 +146,10 @@ create policy "Users can view own vault"
 create policy "Users can add to own vault"
   on public.memory_vault for insert
   with check (auth.uid() = user_id);
+
+create policy "Users can update own vault"
+  on public.memory_vault for update
+  using (auth.uid() = user_id);
 
 create policy "Users can remove from own vault"
   on public.memory_vault for delete

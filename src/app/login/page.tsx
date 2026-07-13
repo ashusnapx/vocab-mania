@@ -41,7 +41,7 @@ export default function LoginPage() {
     if (profile && !profile.onboarding_completed) {
       router.push("/onboarding");
     } else {
-      router.push("/dashboard");
+      router.push("/progress");
     }
   };
 

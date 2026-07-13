@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, BookOpen, Star, BarChart3, Home, Settings } from "lucide-react";
+import { Menu, X, BookOpen, Star, BarChart3, Settings } from "lucide-react";
 import { APP_NAME } from "@/lib/constants";
 
 const APP_NAV = [
-  { label: "Dashboard", href: "/dashboard", icon: Home },
+  { label: "Progress", href: "/progress", icon: BarChart3 },
   { label: "Learn", href: "/learn", icon: BookOpen },
   { label: "Vault", href: "/memory-vault", icon: Star },
-  { label: "Progress", href: "/progress", icon: BarChart3 },
   { label: "Settings", href: "/settings", icon: Settings },
 ] as const;
 
