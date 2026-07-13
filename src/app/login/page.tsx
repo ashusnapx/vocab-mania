@@ -37,11 +37,7 @@ export default function LoginPage() {
       .eq("id", data.user.id)
       .single();
 
-    if (profile && !profile.onboarding_completed) {
-      router.push("/onboarding");
-    } else {
-      router.push("/progress");
-    }
+    router.push("/learn");
   };
 
   const handleGoogleLogin = async () => {

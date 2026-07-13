@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useUser } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useFolderStats } from "@/lib/queries";
@@ -10,6 +11,12 @@ import Link from "next/link";
 export default function QuizPage() {
   const { user, loading: authLoading } = useUser();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [authLoading, user, router]);
 
   const { data: folderStats = {} } = useFolderStats(user?.id);
 
@@ -22,7 +29,6 @@ export default function QuizPage() {
   }
 
   if (!user) {
-    router.push("/login");
     return null;
   }
 

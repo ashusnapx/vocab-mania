@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -40,6 +40,12 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(null), 1500);
   };
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [authLoading, user, router]);
+
   if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center dark:bg-[#0a0a0b]">
@@ -49,7 +55,6 @@ export default function SettingsPage() {
   }
 
   if (!user) {
-    router.push("/login");
     return null;
   }
 

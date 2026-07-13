@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useUser } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +13,12 @@ export default function VaultPage() {
   const { user, loading: authLoading } = useUser();
   const router = useRouter();
   const supabase = createClient();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [authLoading, user, router]);
 
   const { data: folderStats = {} } = useFolderStats(user?.id);
   const [activeTab, setActiveTab] = useState<"all" | "words" | "homonyms" | "idioms">("all");
@@ -138,7 +144,6 @@ export default function VaultPage() {
   }
 
   if (!user) {
-    router.push("/login");
     return null;
   }
 

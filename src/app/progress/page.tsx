@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useUser } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useProfile, useSessions, useFolderStats, useMasteredItems } from "@/lib/queries";
@@ -29,6 +29,12 @@ const PAGE_SIZE = 10;
 export default function ProgressPage() {
   const { user, loading: authLoading } = useUser();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [authLoading, user, router]);
 
   const { data: profile, isLoading: profileLoading } = useProfile(user?.id);
   const { data: sessions = [] } = useSessions(user?.id);
@@ -153,7 +159,6 @@ export default function ProgressPage() {
   }
 
   if (!user) {
-    router.push("/login");
     return null;
   }
 
