@@ -2,77 +2,47 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-
-const FAQS = [
-  {
-    q: "How does the Spaced Repetition system work?",
-    a: "When you view flashcards, marking words as 'I Know' updates their status in the database. The platform uses this data to schedule reviews at increasing intervals, ensuring words are queried right before you forget them.",
-  },
-  {
-    q: "Why are homonyms and idioms unlocked automatically?",
-    a: "Unlike standard vocabulary words which generate dynamic quiz distractors, homonyms and idioms represent static databases. We unlock them from the start so you can jump directly into learning and quizzing Top 300 folders without delay.",
-  },
-  {
-    q: "How is user level and rank computed?",
-    a: "Your level is calculated dynamically on-the-fly using a quadratic formula: Level = floor(sqrt(XP / 20)) + 1. Levels are grouped into tier badges (Prarambhik, Saksham, Praveen, Daksh, Acharya, Maharathi) with custom badges.",
-  },
-  {
-    q: "What is the daily XP cap system?",
-    a: "To prevent automation hacks and grinding, we enforce a rolling daily soft-cap on the server side: 100% XP rate up to 300 XP, 50% rate up to 600 XP, and 25% rate beyond that. All gains log to transaction histories.",
-  },
-  {
-    q: "Can I use the app on mobile devices?",
-    a: "Yes! Vocab Mania is a fully responsive Progressive Web App. The bento features reflow, and navigation converts to compact, touch-optimized side drawers on all mobile screen viewports.",
-  },
-];
+import { FAQ } from "@/lib/constants";
 
 export function Faq() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  const toggleFaq = (index: number) => {
-    setActiveIndex(activeIndex === index ? null : index);
-  };
-
   return (
-    <section className="bg-[#fffdf8] py-20 dark:bg-[#0a0a0b] border-t border-outline-variant/10 dark:border-white/[0.03] transition-colors duration-300">
+    <section id="faq" className="bg-fog dark:bg-[#111318] py-16 md:py-20">
       <div className="section-wrap max-w-3xl">
-        <div className="text-center mb-16 space-y-3">
-          <p className="text-[11px] font-bold text-primary dark:text-[#60a5fa] uppercase tracking-widest">
-            Common Inquiries
-          </p>
-          <h2 className="font-display text-[32px] font-bold leading-tight tracking-tight text-on-surface dark:text-white sm:text-[40px]">
-            Frequently Asked Questions
+        {/* Header */}
+        <div className="mb-12 text-center">
+          <span className="inline-flex items-center rounded-full bg-violet-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-violet-primary dark:text-[#a78bfa]">
+            {FAQ.tag}
+          </span>
+          <h2 className="mt-5 font-display text-[32px] font-semibold leading-[1.2] tracking-[-0.025em] text-midnight-ink sm:text-[40px] dark:text-white">
+            {FAQ.headline}
           </h2>
         </div>
 
         {/* Accordions */}
-        <div className="space-y-3.5">
-          {FAQS.map((faq, idx) => {
+        <div className="space-y-3">
+          {FAQ.items.map((faq, idx) => {
             const isOpen = activeIndex === idx;
             return (
-              <div 
+              <div
                 key={faq.q}
-                className="rounded-2xl border border-outline-variant/20 bg-surface dark:border-white/[0.04] dark:bg-surface-container overflow-hidden transition-all duration-200"
+                className="rounded-[16px] border border-neutral-100 bg-white dark:border-white/[0.06] dark:bg-[#12121a] overflow-hidden transition-all duration-200"
               >
                 <button
-                  onClick={() => toggleFaq(idx)}
-                  className="w-full flex items-center justify-between px-6 py-4.5 text-left text-[14.5px] font-bold text-on-surface hover:bg-surface-container-low transition-colors dark:text-white dark:hover:bg-white/[0.02]"
+                  onClick={() => setActiveIndex(isOpen ? null : idx)}
+                  className="w-full flex items-center justify-between px-5 py-4 text-left text-[15px] font-medium text-midnight-ink hover:bg-neutral-50/50 transition-colors dark:text-white dark:hover:bg-white/[0.02]"
                 >
                   <span>{faq.q}</span>
-                  <ChevronDown 
-                    size={16} 
-                    className={`text-outline transition-transform duration-200 shrink-0 ml-4 ${
-                      isOpen ? "rotate-180 text-on-surface dark:text-white" : ""
-                    }`}
+                  <ChevronDown
+                    size={16}
+                    className={`text-graphite shrink-0 ml-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                   />
                 </button>
-                
-                <div 
-                  className={`transition-all duration-250 ease-in-out ${
-                    isOpen ? "max-h-[200px] border-t border-outline-variant/10 dark:border-white/[0.04]" : "max-h-0"
-                  } overflow-hidden`}
+                <div
+                  className={`transition-all duration-200 overflow-hidden ${isOpen ? "max-h-[200px]" : "max-h-0"}`}
                 >
-                  <p className="px-6 py-5 text-[13.5px] leading-relaxed text-outline/80 dark:text-white/60">
+                  <p className="px-5 pb-4 text-[14px] leading-[1.75] text-graphite dark:text-white/50">
                     {faq.a}
                   </p>
                 </div>

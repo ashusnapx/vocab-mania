@@ -72,10 +72,8 @@ export function useFolderStats(userId: string | undefined) {
       const stats: Record<string, FolderStats> = {};
 
       const folderQueries = FOLDERS.map(async (folder) => {
-        // 1. Total count
-        const { count: total } = await supabase
-          .from(folder.dbTable)
-          .select("id", { count: "exact", head: true });
+        // 1. Total count (retrieved directly from static FOLDERS config to bypass DB hits)
+        const total = folder.totalCount;
 
         // 2. All progress for this user in this folder (single query)
         const { data: progressRows } = await supabase
@@ -532,6 +530,9 @@ export function useClearAllData(userId: string | undefined) {
         supabase.from("user_progress").delete().eq("user_id", userId),
         supabase.from("user_homonym_progress").delete().eq("user_id", userId),
         supabase.from("user_idiom_progress").delete().eq("user_id", userId),
+        supabase.from("user_current_affairs_progress").delete().eq("user_id", userId),
+        supabase.from("user_formulas_progress").delete().eq("user_id", userId),
+        supabase.from("user_fun_facts_progress").delete().eq("user_id", userId),
         supabase.from("learning_sessions").delete().eq("user_id", userId),
         supabase
           .from("profiles")
@@ -556,10 +557,22 @@ export function useExportData(userId: string | undefined) {
   return useMutation({
     mutationFn: async () => {
       if (!userId) return null;
-      const [progress, homonymProgress, idiomProgress, sessions, profile] = await Promise.all([
+      const [
+        progress,
+        homonymProgress,
+        idiomProgress,
+        currentAffairsProgress,
+        formulasProgress,
+        funFactsProgress,
+        sessions,
+        profile,
+      ] = await Promise.all([
         supabase.from("user_progress").select("*").eq("user_id", userId),
         supabase.from("user_homonym_progress").select("*").eq("user_id", userId),
         supabase.from("user_idiom_progress").select("*").eq("user_id", userId),
+        supabase.from("user_current_affairs_progress").select("*").eq("user_id", userId),
+        supabase.from("user_formulas_progress").select("*").eq("user_id", userId),
+        supabase.from("user_fun_facts_progress").select("*").eq("user_id", userId),
         supabase.from("learning_sessions").select("*").eq("user_id", userId),
         supabase.from("profiles").select("*").eq("id", userId).single(),
       ]);
@@ -570,6 +583,9 @@ export function useExportData(userId: string | undefined) {
         progress: progress.data,
         homonym_progress: homonymProgress.data,
         idiom_progress: idiomProgress.data,
+        current_affairs_progress: currentAffairsProgress.data,
+        formulas_progress: formulasProgress.data,
+        fun_facts_progress: funFactsProgress.data,
         sessions: sessions.data,
       };
     },

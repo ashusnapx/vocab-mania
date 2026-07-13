@@ -4,109 +4,79 @@
 
 export const APP_NAME = "Vocab Mania";
 export const APP_DESCRIPTION =
-  "The smarter way to build vocabulary for SSC, CAT, and competitive exams.";
+  "Vocab Mania — SSC, CAT aur sabhi competitive exams ke liye vocabulary mastery platform.";
 
 // ---------- NAVIGATION ----------
 export const NAV_LINKS = [
   { label: "Features", href: "#features" },
-  { label: "How It Works", href: "#how-it-works" },
+  { label: "Kaise Kaam Karta Hai", href: "#how-it-works" },
   { label: "Why Us", href: "/why-we-are-best" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ] as const;
 
-export const NAV_CTA = { label: "Get started", href: "/signup" };
+export const NAV_CTA = { label: "Shuru Karo", href: "/signup" };
 
 // ---------- HERO ----------
 export const HERO = {
-  tag: "Built for serious aspirants",
-  headline: "Master every word, ace every exam.",
+  tag: "Aspirants ke liye banaya gaya",
+  headline: "Har word yaad karo, har exam jeeto.",
   subhead:
-    "Spaced repetition, targeted quizzes, and a proven learning system — built for SSC, CAT, and every competitive exam that tests your word power.",
-  primaryCta: { label: "Start learning free", href: "/signup" },
-  secondaryCta: { label: "See how it works", href: "#how-it-works" },
-  info: "Free to start. No credit card required.",
-  floatingWords: [
-    { word: "Ephemeral", meaning: "शब्द — short-lived" },
-    { word: "Ubiquitous", meaning: "हर जगह — everywhere" },
-    { word: "Pragmatic", meaning: "व्यावहारिक — practical" },
-    { word: "Eloquent", meaning: "वाक्पटु — fluent" },
-    { word: "Resilient", meaning: "लचीला — strong" },
-    { word: "Ephemeral", meaning: "क्षणभंगुर — fleeting" },
-    { word: "Ubiquitous", meaning: "सर्वव्यापी — omnipresent" },
-    { word: "Pragmatic", meaning: "यथार्थवादी — realist" },
-    { word: "Ambiguous", meaning: "अस्पष्ट — unclear" },
-    { word: "Benevolent", meaning: "दयालु — kind" },
-    { word: "Candid", meaning: "स्पष्टवादी — frank" },
-    { word: "Diligent", meaning: "परिश्रमी — hardworking" },
-    { word: "Eloquent", meaning: "वाग्मिता — oratory" },
-    { word: "Gregarious", meaning: "मिलनसार — sociable" },
-    { word: "Tenacious", meaning: "दृढ़ — persistent" },
-    { word: "Verbose", meaning: "वाचाल — wordy" },
-  ],
+    "Spaced repetition, adaptive quizzes aur mnemonic system — SSC, CAT aur har competitive exam ke liye. Ratta mat lagao, samajh ke padho.",
+  primaryCta: { label: "Abhi Free Shuru Karo", href: "/signup" },
+  secondaryCta: { label: "Kaise kaam karta hai?", href: "#how-it-works" },
+  info: "Bilkul free hai. Credit card ki zaroorat nahi.",
 };
 
-// ---------- SOCIAL PROOF ----------
-export const SOCIAL_PROOF = {
-  tag: "Trusted by aspirants",
-  exams: [
-    { name: "SSC CGL", icon: "📝" },
-    { name: "SSC CHSL", icon: "📋" },
-    { name: "CAT", icon: "🎓" },
-    { name: "GRE", icon: "🌍" },
-    { name: "UPSC", icon: "🏛️" },
-    { name: "Bank PO", icon: "🏦" },
-  ],
-  stats: { rating: "4.9", reviews: "2,400+", platform: "Play Store" },
-};
+// ---------- STATS ----------
+export const STATS = [
+  { label: "Words Mastered", value: 12400, suffix: "+", delta: "sabhi users ne" },
+  { label: "Active Learners", value: 8200, suffix: "+", delta: "is mahine" },
+  { label: "Retention Rate", value: 94, suffix: "%", delta: "30 din baad" },
+  { label: "Exams Covered", value: 24, suffix: "", delta: "aur badh rahe hain" },
+];
 
 // ---------- FEATURES ----------
 export const FEATURES = {
-  tag: "Features",
-  headline: "Everything you need to own every word",
+  tag: "Kya Milega Aapko",
+  headline: "Woh sab kuch jo aapko chahiye",
   subhead:
-    "Built from the ground up for how aspirants actually learn — not a generic flashcard app.",
+    "Vocab Mania sirf flashcards nahi hai — yeh ek complete vocabulary mastery system hai.",
   items: [
     {
-      category: "Learning",
       title: "Spaced Repetition Engine",
       description:
-        "A scientifically-tuned algorithm that surfaces words right before you forget them. Reviews are scheduled, not guessed.",
+        "Scientifically tuned algorithm — aap bhulne wale ho tabhi word wapas aata hai. Kam padho, zyada yaad karo.",
       icon: "schedule",
     },
     {
-      category: "Memory",
       title: "Mnemonic System",
       description:
-        "Every word gets a memorable story, visual cue, or association — crafted to stick in your memory for months, not days.",
+        "Har word ke saath ek yaad rakhne wali kahani, visual cue, ya association. Months tak yaad rahega, days nahi.",
       icon: "auto_awesome",
     },
     {
-      category: "Practice",
-      title: "Adaptive Quiz System",
+      title: "Adaptive Quizzes",
       description:
-        "Quizzes that get harder when you're strong and gentler when you're struggling. Every session moves the needle.",
+        "Quizzes jo aapke level ke hisaab se hard ya easy hoti hain. Har session mein improvement dikhegi.",
       icon: "quiz",
     },
     {
-      category: "Analytics",
-      title: "Mastery Dashboard",
-      description:
-        "Track your progress with word-level mastery scores, streak data, and exam-readiness predictions.",
-      icon: "analytics",
-    },
-    {
-      category: "Exams",
       title: "PYQ-Aligned Word Lists",
       description:
-        "Words are tagged by exam, frequency, and year — so you study what actually appears, not random lists.",
+        "Words exam, frequency aur year ke hisaab se tagged hain — jo actually aata hai wahi padho, random lists nahi.",
       icon: "school",
     },
     {
-      category: "Social",
-      title: "Leaderboards & Streaks",
+      title: "Mastery Dashboard",
       description:
-        "Compete with fellow aspirants. Daily streaks, weekly challenges, and rank boards keep you accountable.",
+        "Word-level mastery scores, streak data aur exam-readiness predictions — sab ek jagah dikhega.",
+      icon: "analytics",
+    },
+    {
+      title: "Memory Vault",
+      description:
+        "Confusing words ko star karo, unhe vault mein daal do. Exam se pehle sirf vault revise karo — sorted revision.",
       icon: "emoji_events",
     },
   ],
@@ -114,131 +84,92 @@ export const FEATURES = {
 
 // ---------- HOW IT WORKS ----------
 export const HOW_IT_WORKS = {
-  tag: "How It Works",
-  headline: "Three steps to word mastery",
+  tag: "Kaise Kaam Karta Hai",
+  headline: "Bas 3 steps mein word mastery",
   subhead:
-    "No clutter, no complexity — just a clear path from unknown to mastered.",
+    "Koi clutter nahi, koi complexity nahi — bas ek clear path unknown se mastered tak.",
   steps: [
     {
       number: "01",
-      title: "Choose your exam",
+      title: "Apna exam choose karo",
       description:
-        "Pick SSC CGL, CAT, GRE, or any competitive exam. We load the most relevant word lists instantly.",
-      icon: "touch_app",
+        "SSC CGL, CAT, GRE — jo bhi exam de rahe ho, word list instantly load ho jayegi.",
     },
     {
       number: "02",
-      title: "Learn with mnemonics",
+      title: "Mnemonics se seekho",
       description:
-        "Each word comes with a mnemonic, usage examples, and etymology. Memory techniques that adapt to how you think.",
-      icon: "psychology",
+        "Har word ke saath mnemonic, usage examples aur etymology. Memory techniques jo aapke brain ke hisaab se kaam karti hain.",
     },
     {
       number: "03",
-      title: "Master through repetition",
+      title: "Repetition se master karo",
       description:
-        "The engine schedules revisions at the perfect interval. You review fewer words but remember more of them.",
-      icon: "trending_up",
+        "Engine bilkul sahi time pe revision schedule karega. Kam words review karo, zyada yaad karo.",
     },
   ],
 };
 
-// ---------- WORD OF THE DAY ----------
-export const WORD_OF_THE_DAY = {
-  tag: "Word of the Day",
-  word: "Ephemeral",
-  pronunciation: "/ɪˈfɛm(ə)r(ə)l/",
-  partOfSpeech: "adjective",
-  definition: "Lasting for a very short time.",
-  example:
-    "The ephemeral beauty of cherry blossoms reminds us to appreciate the present moment.",
-  mnemonic: "Think: 'Epi-phon' — a phone call that ends quickly. Something ephemeral doesn't last.",
-};
-
-// ---------- STATS ----------
-export const STATS = [
-  { label: "Words mastered", value: 12400, suffix: "+", delta: "across all users" },
-  { label: "Active learners", value: 8200, suffix: "+", delta: "this month" },
-  { label: "Avg. retention", value: 94, suffix: "%", delta: "after 30 days" },
-  { label: "Exams covered", value: 24, suffix: "", delta: "and growing" },
-];
-
 // ---------- TESTIMONIALS ----------
 export const TESTIMONIALS = [
   {
-    quote:
-      "I went from knowing 200 words to 800 in six weeks. The mnemonics are absurdly effective — I still remember 'ephemeral' because of the story it gave me.",
-    author: "Priya Sharma",
-    role: "SSC CGL 2025 — Rank 34",
-    rating: 5,
+    name: "Anish Kumar",
+    role: "SSC CGL Candidate",
+    stat: "135/135 in English",
+    content:
+      "Homonyms ki spelling traps bahut helpful thi. Standard books itna challenge nahi karte jitna Vocab Mania karta hai. Final week mein vault se revision minutes mein ho gayi.",
   },
   {
-    quote:
-      "The adaptive quizzes changed everything. I used to waste time on words I already knew. Now every minute of study counts.",
-    author: "Arjun Mehta",
-    role: "CAT 2025 — 99.2 percentile",
-    rating: 5,
+    name: "Preeti Verma",
+    role: "Bank PO Aspirant",
+    stat: "820+ Words Mastered",
+    content:
+      "Streak calendar dekh ke roz subah padhne ka mann karta hai. Level upgrade hona bahut satisfying feel hota hai — Saksham se Acharya tak pahuncha.",
   },
   {
-    quote:
-      "I recommended Vocab Mania to my entire batch. The PYQ word lists are gold — most of the vocabulary section felt like revision.",
-    author: "Kavya Nair",
-    role: "UPSC 2024 — AIR 112",
-    rating: 5,
+    name: "Shivam Singh",
+    role: "NDA Candidate",
+    stat: "96.4% Quiz Accuracy",
+    content:
+      "300+ idioms with Hindi meanings — yeh bahut brilliant hai. Flashcards aur quizzes dono fast aur effective hain. PDFs padhne se 10x better hai.",
   },
 ];
 
 // ---------- PRICING ----------
 export const PRICING = {
   tag: "Pricing",
-  headline: "Simple, transparent pricing",
-  subhead: "Start free. Upgrade when you're ready to go all in.",
+  headline: "Simple, honest pricing",
+  subhead: "Free se shuru karo. Jab ready ho jao tab upgrade karo.",
   tiers: [
     {
-      name: "Free",
+      name: "Basic Starter",
       price: "₹0",
       period: "forever",
-      description: "Perfect for getting started",
+      description: "Roz ka vocabulary practice ke liye",
       features: [
-        "200 words",
-        "Basic spaced repetition",
-        "1 exam word list",
-        "Community access",
+        "15 items per session",
+        "300+ idioms library",
+        "Basic spelling tests",
+        "Limited Memory Vault",
       ],
-      cta: { label: "Get started", href: "/signup" },
+      cta: { label: "Sign Up Free", href: "/signup" },
       highlighted: false,
     },
     {
-      name: "Pro",
+      name: "Exam Pro",
       price: "₹199",
       period: "/month",
-      description: "For serious aspirants",
+      description: "Serious aspirants ke liye full access",
       features: [
-        "Unlimited words",
-        "Mnemonics & memory techniques",
-        "All 24 exam lists",
+        "Unlimited cards per session",
+        "Full mnemonics library",
+        "All 24 exam word lists",
         "Adaptive quizzes",
-        "Mastery dashboard",
-        "Priority support",
+        "Infinite Vault capacity",
+        "Advanced analytics dashboard",
       ],
-      cta: { label: "Start free trial", href: "/signup?plan=pro" },
+      cta: { label: "Pro Access Lo", href: "/signup?plan=pro" },
       highlighted: true,
-    },
-    {
-      name: "Team",
-      price: "₹499",
-      period: "/month",
-      description: "For coaching institutes",
-      features: [
-        "Everything in Pro",
-        "Up to 50 students",
-        "Teacher dashboard",
-        "Custom word lists",
-        "Progress reports",
-        "API access",
-      ],
-      cta: { label: "Contact sales", href: "/contact" },
-      highlighted: false,
     },
   ],
 };
@@ -246,74 +177,68 @@ export const PRICING = {
 // ---------- FAQ ----------
 export const FAQ = {
   tag: "FAQ",
-  headline: "Frequently asked questions",
+  headline: "Sawal jo aate hain sabke mann mein",
   items: [
     {
-      question: "How does the spaced repetition algorithm work?",
-      answer:
-        "Our algorithm is based on the SM-2 system, optimized through extensive testing with thousands of aspirants. It tracks how well you know each word and schedules reviews at the exact moment you're about to forget. This means you spend less time reviewing and more time learning new words.",
+      q: "Free plan mein kya milta hai?",
+      a: "Free plan mein 200 words, basic spaced repetition, 1 exam word list aur community access milta hai. Roz 15 words tak padh sakte ho. Jab zyada chahiye tab Pro plan le sakte ho — 7-day free trial ke saath.",
     },
     {
-      question: "What exams do you cover?",
-      answer:
-        "We cover 24 competitive exams including SSC CGL, SSC CHSL, CAT, GRE, UPSC, Bank PO, RBI Grade B, and more. Each exam has a curated word list based on previous year papers and frequency analysis.",
+      q: "Spaced repetition actually kaam karta hai kya?",
+      a: "Haan. Jab aap flashcards dekhte ho aur words ko 'I Know' mark karte ho, system unhe increasing intervals pe schedule karta hai. Jaise pehle 1 din baad, phir 3 din, phir 7 din. Isliye aap bhulne wale ho tabhi word wapis aata hai — permanently yaad ho jata hai.",
     },
     {
-      question: "Can I use Vocab Mania offline?",
-      answer:
-        "Yes! Our mobile app supports full offline mode. Download your word lists and study anywhere — the app syncs your progress when you're back online.",
+      q: "Homonyms aur idioms kyun already unlocked hain?",
+      a: "Standard vocabulary words ke liye dynamic quizzes generate hote hain — jo naye hoti hain har baar. But homonyms aur idioms ke liye fixed database hai. Isliye unhe seed kar diya gaya hai taaki aap seedha padh sako bina kisi wait ke.",
     },
     {
-      question: "How effective are the mnemonics?",
-      answer:
-        "Our mnemonics are contextually relevant, easy to remember, and designed based on memory science principles. Users report 94% retention rate after 30 days — significantly higher than traditional methods.",
+      q: "Level aur rank kaise kaam karta hai?",
+      a: "Aapke XP (experience points) ke basis pe level calculate hota hai. Jitna zyada padhoge aur quizzes doge, utna zyada XP milega. Levels hain — Prarambhik, Saksham, Praveen, Daksh, Acharya, Maharathi. Har level pe naya badge aur recognition milega.",
     },
     {
-      question: "Is there a free trial for the Pro plan?",
-      answer:
-        "Yes! The free plan gives you access to 200 words and basic features forever. When you're ready for more, Pro comes with a 7-day free trial — no credit card required.",
+      q: "Mobile pe chalega?",
+      a: "Haan. Vocab Mania ek Progressive Web App hai — phone ke browser mein kholog toh app jaisa experience milega. Install bhi kar sakte ho home screen se. Offline mode bhi hai, baad mein sync ho jayega.",
     },
   ],
 };
 
 // ---------- CTA ----------
 export const CTA = {
-  headline: "Start mastering vocabulary today",
-  body: "Join 8,200+ aspirants building word power with spaced repetition, memory techniques, and adaptive quizzes.",
-  primaryCta: { label: "Get started free", href: "/signup" },
-  secondaryCta: { label: "View pricing", href: "#pricing" },
-  info: "Free for the first 200 words.",
+  headline: "Vocab Mania se shuru karo aaj se",
+  body: "8,200+ aspirants already vocabulary build kar rahe hain. Ab aapki baari hai.",
+  primaryCta: { label: "Abhi Free Shuru Karo", href: "/signup" },
+  secondaryCta: { label: "Pricing Dekho", href: "#pricing" },
 };
 
 // ---------- FOOTER ----------
 export const FOOTER = {
-  tagline: "Built for aspirants who take vocabulary seriously.",
+  tagline: "Aspirants ke liye vocabulary mastery platform.",
   columns: [
     {
       title: "Product",
       links: [
         { label: "Features", href: "#features" },
         { label: "Pricing", href: "#pricing" },
-        { label: "Changelog", href: "#changelog" },
-        { label: "Roadmap", href: "#roadmap" },
+        { label: "Changelog", href: "#" },
+        { label: "Roadmap", href: "#" },
       ],
     },
     {
       title: "Resources",
       links: [
-        { label: "Blog", href: "#blog" },
-        { label: "Word of the Day", href: "#word-of-the-day" },
-        { label: "API Docs", href: "#api" },
-        { label: "Community", href: "#community" },
+        { label: "Blog", href: "#" },
+        { label: "Word of the Day", href: "#" },
+        { label: "Community", href: "#" },
+        { label: "Study Guides", href: "#" },
       ],
     },
     {
       title: "Company",
       links: [
-        { label: "About", href: "#about" },
-        { label: "Contact", href: "#contact" },
-        { label: "Privacy", href: "#privacy" },
-        { label: "Terms", href: "#terms" },
+        { label: "About", href: "/why-we-are-best" },
+        { label: "Contact", href: "#" },
+        { label: "Privacy", href: "#" },
+        { label: "Terms", href: "#" },
       ],
     },
   ],

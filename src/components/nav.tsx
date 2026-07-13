@@ -31,9 +31,12 @@ export function Nav() {
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const ThemeIcon = theme === "dark" ? Sun : Moon;
 
+  const ctaHref = user ? "/learn" : NAV_CTA.href;
+  const ctaLabel = user ? "Padhai Shuru Karo" : NAV_CTA.label;
+
   return (
     <header className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 transition-all duration-300">
-      <div 
+      <div
         className={`flex w-full max-w-5xl items-center justify-between h-14 px-6 rounded-full border transition-all duration-300 relative ${
           scrolled
             ? "border-neutral-200/80 bg-white/80 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0a0a0b]/80 shadow-lg"
@@ -42,7 +45,7 @@ export function Nav() {
       >
         {/* LOGO */}
         <Link href="/" className="flex items-center gap-2 group shrink-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-black text-on-primary transition-all duration-300 group-hover:scale-105 group-hover:rotate-6 shadow-sm dark:bg-[#60a5fa] dark:text-[#0c1929]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-primary text-xs font-black text-white transition-all duration-300 group-hover:scale-105 group-hover:rotate-6 shadow-sm">
             V
           </div>
           <span className="font-display text-[15px] font-bold tracking-tight text-neutral-900 dark:text-white">
@@ -56,7 +59,7 @@ export function Nav() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-full px-4 py-1.5 text-[13.5px] font-bold text-neutral-600 transition-all duration-200 hover:text-neutral-900 hover:bg-neutral-100/55 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/[0.03]"
+              className="rounded-full px-4 py-1.5 text-[13.5px] font-medium text-neutral-600 transition-all duration-200 hover:text-neutral-900 hover:bg-neutral-100/55 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/[0.03]"
             >
               {link.label}
             </Link>
@@ -74,10 +77,10 @@ export function Nav() {
           </button>
 
           <Link
-            href={user ? "/learn" : NAV_CTA.href}
-            className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-4.5 text-[13px] font-bold text-on-primary transition-all duration-200 hover:opacity-95 active:scale-[0.97] shadow-sm dark:bg-[#60a5fa] dark:text-[#0c1929]"
+            href={ctaHref}
+            className="inline-flex h-9 items-center justify-center rounded-full bg-violet-primary px-4.5 text-[13px] font-semibold text-white transition-all duration-200 hover:bg-violet-hover active:scale-[0.97] shadow-sm"
           >
-            {user ? "Go to Study" : NAV_CTA.label}
+            {ctaLabel}
           </Link>
         </div>
 
@@ -99,7 +102,7 @@ export function Nav() {
           </button>
         </div>
 
-        {/* MOBILE DRAWER (FLOATING CARD DESIGN) */}
+        {/* MOBILE DRAWER */}
         {mobileOpen && (
           <div className="absolute top-16 left-0 right-0 z-40 rounded-[22px] border border-neutral-200/70 bg-white/95 p-5 shadow-xl dark:border-white/10 dark:bg-[#0c0c0e]/95 md:hidden animate-fade-in-up" style={{ animationDuration: "0.2s" }}>
             <div className="flex flex-col gap-1">
@@ -108,23 +111,22 @@ export function Nav() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-between rounded-xl px-4 py-3 text-[14px] font-bold text-neutral-800 transition-all hover:bg-neutral-50 dark:text-white dark:hover:bg-white/[0.06]"
+                  className="flex items-center justify-between rounded-xl px-4 py-3 text-[14px] font-medium text-neutral-800 transition-all hover:bg-neutral-50 dark:text-white dark:hover:bg-white/[0.06]"
                 >
                   {link.label}
                 </Link>
               ))}
 
               <Link
-                href={user ? "/learn" : NAV_CTA.href}
+                href={ctaHref}
                 onClick={() => setMobileOpen(false)}
-                className="mt-4 flex h-11 items-center justify-center gap-2 rounded-xl bg-primary text-[14px] font-bold text-on-primary hover:opacity-95 transition-all dark:bg-[#60a5fa] dark:text-[#0c1929]"
+                className="mt-4 flex h-11 items-center justify-center gap-2 rounded-xl bg-violet-primary text-[14px] font-semibold text-white hover:bg-violet-hover transition-all"
               >
-                {user ? "Go to Study" : NAV_CTA.label}
+                {ctaLabel}
               </Link>
             </div>
           </div>
         )}
-
       </div>
     </header>
   );

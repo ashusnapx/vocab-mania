@@ -1,4 +1,4 @@
-import { Languages, BookOpen } from "lucide-react";
+import { Languages, BookOpen, Newspaper, Calculator, Lightbulb } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { WORD_DATABASE } from "./words";
 
@@ -160,6 +160,90 @@ export const FOLDERS: FolderConfig[] = [
 
       return questions;
     },
+  },
+  {
+    id: "current_affairs",
+    name: "Current Affairs",
+    description: "Latest developments and news",
+    icon: Newspaper,
+    color: "secondary",
+    totalCount: 5,
+    dbTable: "current_affairs",
+    progressTable: "user_current_affairs_progress",
+    progressIdField: "item_id",
+    questionTable: null,
+    questionIdField: null,
+    selectFields: "id, question, option_a, option_b, option_c, option_d, correct_option, explanation",
+    questionGenerator: (row) => [
+      {
+        id: row.id as number,
+        question: row.question as string,
+        options: {
+          a: row.option_a as string,
+          b: row.option_b as string,
+          c: row.option_c as string,
+          d: row.option_d as string,
+        },
+        answer: row.correct_option as string,
+        itemId: row.id as number,
+      },
+    ],
+  },
+  {
+    id: "formula_factory",
+    name: "Formula Factory",
+    description: "Scientific formulas and maths equations",
+    icon: Calculator,
+    color: "primary",
+    totalCount: 5,
+    dbTable: "formulas",
+    progressTable: "user_formulas_progress",
+    progressIdField: "item_id",
+    questionTable: null,
+    questionIdField: null,
+    selectFields: "id, topic, formula_name, question, option_a, option_b, option_c, option_d, correct_option, explanation",
+    questionGenerator: (row) => [
+      {
+        id: row.id as number,
+        question: row.question as string,
+        options: {
+          a: row.option_a as string,
+          b: row.option_b as string,
+          c: row.option_c as string,
+          d: row.option_d as string,
+        },
+        answer: row.correct_option as string,
+        itemId: row.id as number,
+      },
+    ],
+  },
+  {
+    id: "fun_facts",
+    name: "Fun Facts",
+    description: "Scientific anomalies and trivia facts",
+    icon: Lightbulb,
+    color: "tertiary",
+    totalCount: 5,
+    dbTable: "fun_facts",
+    progressTable: "user_fun_facts_progress",
+    progressIdField: "item_id",
+    questionTable: null,
+    questionIdField: null,
+    selectFields: "id, question, option_a, option_b, option_c, option_d, correct_option, explanation",
+    questionGenerator: (row) => [
+      {
+        id: row.id as number,
+        question: row.question as string,
+        options: {
+          a: row.option_a as string,
+          b: row.option_b as string,
+          c: row.option_c as string,
+          d: row.option_d as string,
+        },
+        answer: row.correct_option as string,
+        itemId: row.id as number,
+      },
+    ],
   },
 ];
 
