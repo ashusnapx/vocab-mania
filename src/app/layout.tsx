@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Lexend, Inter } from "next/font/google";
 import "./globals.css";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
-import { Nav } from "@/components/nav";
+import { NavRouter } from "@/components/nav-router";
+import { AuthProvider } from "@/lib/auth-context";
 
 const lexend = Lexend({
   variable: "--font-lexend",
@@ -29,8 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${lexend.variable} ${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <Nav />
-        <main className="flex-1">{children}</main>
+        <AuthProvider>
+          <NavRouter />
+          <main className="flex-1 pt-14">{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

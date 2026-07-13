@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { APP_NAME, NAV_LINKS, NAV_CTA } from "@/lib/constants";
+import { useUser } from "@/lib/auth-context";
 
 export function Nav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user } = useUser();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -53,10 +55,10 @@ export function Nav() {
 
         {/* Desktop CTA */}
         <Link
-          href={NAV_CTA.href}
+          href={user ? "/dashboard" : NAV_CTA.href}
           className="hidden rounded-full bg-primary px-6 py-2.5 text-[14px] font-medium text-on-primary shadow-sm transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-95 md:inline-flex"
         >
-          {NAV_CTA.label}
+          {user ? "Dashboard" : NAV_CTA.label}
         </Link>
 
         {/* Mobile toggle */}
@@ -84,11 +86,11 @@ export function Nav() {
               </Link>
             ))}
             <Link
-              href={NAV_CTA.href}
+              href={user ? "/dashboard" : NAV_CTA.href}
               onClick={() => setOpen(false)}
               className="mt-2 rounded-full bg-primary px-6 py-3 text-center text-[14px] font-medium text-on-primary transition-all duration-300 hover:bg-primary/90 active:scale-95"
             >
-              {NAV_CTA.label}
+              {user ? "Dashboard" : NAV_CTA.label}
             </Link>
           </div>
         </div>

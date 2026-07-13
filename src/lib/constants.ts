@@ -10,6 +10,7 @@ export const APP_DESCRIPTION =
 export const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
+  { label: "Why Us", href: "/why-we-are-best" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ] as const;
