@@ -1,28 +1,26 @@
-import { Hero } from "@/components/hero";
-import { SocialProof } from "@/components/social-proof";
-import { Stats } from "@/components/stats";
-import { Features } from "@/components/features";
-import { HowItWorks } from "@/components/how-it-works";
-import { WordOfTheDay } from "@/components/word-of-the-day";
-import { Testimonial } from "@/components/testimonial";
-import { Pricing } from "@/components/pricing";
-import { Faq } from "@/components/faq";
-import { CtaSection } from "@/components/cta-section";
-import { Footer } from "@/components/footer";
+import { Hero } from "@/components/landing/hero";
+import { SocialProof } from "@/components/landing/social-proof";
+import { BentoFeatures } from "@/components/landing/bento-grid";
+import { HowItWorks } from "@/components/landing/how-it-works";
+import { Comparison } from "@/components/landing/comparison";
+import { Testimonials } from "@/components/landing/testimonials";
+import { Pricing } from "@/components/landing/pricing";
+import { Faq } from "@/components/landing/faq";
+import { Cta } from "@/components/landing/cta";
+import { Footer } from "@/components/landing/footer";
 
 export default function Home() {
   return (
     <>
       <Hero />
       <SocialProof />
-      <Stats />
-      <Features />
-      <WordOfTheDay />
+      <BentoFeatures />
       <HowItWorks />
-      <Testimonial />
+      <Comparison />
+      <Testimonials />
       <Pricing />
       <Faq />
-      <CtaSection />
+      <Cta />
       <Footer />
     </>
   );

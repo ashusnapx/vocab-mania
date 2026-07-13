@@ -11,10 +11,10 @@ type PillButtonProps = {
 };
 
 const variants = {
-  filled: "bg-primary text-on-primary shadow-sm hover:bg-primary/90 hover:shadow-md",
-  tonal: "bg-secondary-container text-on-secondary-container hover:bg-secondary-container/80",
-  outlined: "border border-outline bg-transparent text-primary hover:bg-primary/8",
-  text: "bg-transparent text-primary hover:bg-primary/8",
+  filled: "bg-violet-primary text-white shadow-sm hover:bg-violet-hover hover:shadow-md",
+  tonal: "bg-violet-primary/10 text-violet-primary hover:bg-violet-primary/15 dark:bg-[#a78bfa]/10 dark:text-[#a78bfa]",
+  outlined: "border border-mist-border/60 bg-transparent text-midnight-ink hover:bg-fog dark:border-white/[0.12] dark:text-white dark:hover:bg-white/[0.06]",
+  text: "bg-transparent text-violet-primary hover:bg-violet-primary/10 dark:text-[#a78bfa] dark:hover:bg-[#a78bfa]/10",
 };
 
 const sizes = {
@@ -33,21 +33,19 @@ export function PillButton({
 }: PillButtonProps) {
   const { user } = useUser();
 
-  // If logged in and pointing to an auth page, redirect to dashboard
   const resolvedHref = user && AUTH_ROUTES.includes(href) ? "/progress" : href;
 
-  // If logged in, change label for auth CTAs
   const resolvedLabel =
     user && href === "/signup"
-      ? "Go to Progress"
+      ? "Go to Dashboard"
       : user && href === "/login"
-        ? "Go to Progress"
+        ? "Go to Dashboard"
         : label;
 
   return (
     <Link
       href={resolvedHref}
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-95 ${variants[variant]} ${sizes[size]}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-primary focus-visible:ring-offset-2 active:scale-[0.97] ${variants[variant]} ${sizes[size]}`}
     >
       {resolvedLabel}
     </Link>

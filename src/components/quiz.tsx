@@ -1,32 +1,16 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import type { Word } from "@/lib/words";
-import {
-  CheckCircle2,
-  XCircle,
-  ArrowRight,
-  GripVertical,
-} from "lucide-react";
+import { useState, useMemo } from "react";
+import { CheckCircle2, XCircle, ArrowRight, BookOpen } from "lucide-react";
+import type { FolderQuestion } from "@/lib/folders";
+import type { SessionItem } from "@/lib/folders";
+import { MatchingQuiz, type MatchPair } from "./matching-quiz";
 
 interface QuizProps {
-  words: Word[];
+  questions: FolderQuestion[];
+  sessionItems?: SessionItem[];
   onComplete: (score: number, total: number) => void;
 }
-
-type DragDropQ = {
-  type: "dragdrop";
-  pairs: { word: string; meaning: string }[];
-};
-
-type QuickFireQ = {
-  type: "quickfire";
-  word: Word;
-  options: string[];
-  correctIndex: number;
-};
-
-type QuizQuestion = DragDropQ | QuickFireQ;
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -37,421 +21,263 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-function generateQuestions(words: Word[]): QuizQuestion[] {
-  const allWords = [...words];
-  const questions: QuizQuestion[] = [];
-  const shuffled = shuffleArray(allWords);
-  const pool = shuffled.slice(0, Math.min(8, shuffled.length));
-
-  // Generate drag-and-drop questions (groups of 4)
-  const dragDropWords = pool.slice(0, Math.min(4, pool.length));
-  if (dragDropWords.length >= 2) {
-    const pairs = dragDropWords.map((w) => ({
-      word: w.word,
-      meaning: w.meaning,
-    }));
-    questions.push({ type: "dragdrop", pairs });
-  }
-
-  // Generate quick fire questions from remaining words
-  const remaining = pool.filter((w) => !dragDropWords.includes(w));
-  for (const word of remaining) {
-    const otherMeanings = allWords
-      .filter((w) => w.id !== word.id)
-      .map((w) => w.meaning);
-    const distractors = shuffleArray(otherMeanings).slice(0, 3);
-    const options = shuffleArray([word.meaning, ...distractors]);
-    questions.push({
-      type: "quickfire",
-      word,
-      options,
-      correctIndex: options.indexOf(word.meaning),
-    });
-  }
-
-  return shuffleArray(questions);
-}
-
-// ============ DRAG AND DROP QUESTION ============
-function DragDropQuestion({
-  question,
-  onComplete,
-}: {
-  question: DragDropQ;
-  onComplete: (correct: number) => void;
-}) {
-  const [assignments, setAssignments] = useState<Record<number, number>>({});
-  const [dragging, setDragging] = useState<number | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [results, setResults] = useState<Record<number, boolean>>({});
-
-  const handleDragStart = useCallback((idx: number) => {
-    setDragging(idx);
-  }, []);
-
-  const handleDragOver = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-    },
-    []
+export function Quiz({ questions, sessionItems = [], onComplete }: QuizProps) {
+  const mcqs = useMemo(
+    () => shuffleArray(questions).slice(0, Math.min(3, questions.length)),
+    [questions]
   );
 
-  const handleDrop = useCallback(
-    (targetIdx: number) => (e: React.DragEvent) => {
-      e.preventDefault();
-      if (dragging === null) return;
-      setAssignments((prev) => {
-        const next = { ...prev };
-        // Remove any existing assignment for this word
-        Object.keys(next).forEach((k) => {
-          if (next[Number(k)] === dragging) delete next[Number(k)];
+  const matchPairs = useMemo(() => {
+    if (!sessionItems || sessionItems.length === 0) return [];
+    const list: MatchPair[] = [];
+    sessionItems.forEach((item) => {
+      if (item.data.word1 && item.data.word2) {
+        list.push({
+          id: `${item.id}-1`,
+          term: item.data.word1 as string,
+          definition: item.data.meaning1 as string,
         });
-        next[targetIdx] = dragging;
-        return next;
-      });
-      setDragging(null);
-    },
-    [dragging]
-  );
-
-  const handleTouchEnd = useCallback(
-    (targetIdx: number) => () => {
-      if (dragging === null) return;
-      setAssignments((prev) => {
-        const next = { ...prev };
-        Object.keys(next).forEach((k) => {
-          if (next[Number(k)] === dragging) delete next[Number(k)];
+        list.push({
+          id: `${item.id}-2`,
+          term: item.data.word2 as string,
+          definition: item.data.meaning2 as string,
         });
-        next[targetIdx] = dragging;
-        return next;
-      });
-      setDragging(null);
-    },
-    [dragging]
-  );
-
-  const handleSubmit = useCallback(() => {
-    const res: Record<number, boolean> = {};
-    let correct = 0;
-    question.pairs.forEach((pair, i) => {
-      const assignedWordIdx = assignments[i];
-      if (assignedWordIdx !== undefined) {
-        const isCorrect =
-          question.pairs[assignedWordIdx].word === pair.word;
-        res[i] = isCorrect;
-        if (isCorrect) correct++;
-      } else {
-        res[i] = false;
+      } else if (item.data.word && item.data.meaning) {
+        list.push({
+          id: String(item.id),
+          term: item.data.word as string,
+          definition: item.data.meaning as string,
+        });
+      } else if (item.data.idiom && item.data.meaning) {
+        list.push({
+          id: String(item.id),
+          term: item.data.idiom as string,
+          definition: item.data.meaning as string,
+        });
       }
     });
-    setResults(res);
-    setSubmitted(true);
-    onComplete(correct);
-  }, [assignments, question.pairs, onComplete]);
+    return shuffleArray(list).slice(0, Math.min(4, list.length));
+  }, [sessionItems]);
 
-  const allAssigned = Object.keys(assignments).length === question.pairs.length;
+  const [step, setStep] = useState(0);
+  const [mcqScore, setMcqScore] = useState(0);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
-  return (
-    <div>
-      <p className="text-[14px] text-outline mb-2">
-        Drag each word to its meaning
-      </p>
+  const totalSteps = mcqs.length + (matchPairs.length > 0 ? 1 : 0);
+  const progress = ((step + (submitted && step < mcqs.length ? 0.5 : 0)) / totalSteps) * 100;
 
-      {/* Word chips (draggable) */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {question.pairs.map((pair, i) => {
-          const isAssigned = Object.values(assignments).includes(i);
-          return (
-            <div
-              key={i}
-              draggable={!submitted && !isAssigned}
-              onDragStart={() => !isAssigned && handleDragStart(i)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 text-[13px] font-semibold transition-all select-none ${
-                isAssigned
-                  ? "border-outline-variant/30 bg-surface-container text-outline/50 cursor-default"
-                  : dragging === i
-                    ? "border-primary bg-primary/10 text-primary scale-105 shadow-lg"
-                    : "border-primary/30 bg-primary/5 text-primary cursor-grab active:cursor-grabbing hover:border-primary hover:bg-primary/10"
-              }`}
-            >
-              {!isAssigned && (
-                <GripVertical size={14} className="text-primary/50" />
-              )}
-              {pair.word}
-            </div>
-          );
-        })}
-      </div>
+  const currentMcq = mcqs[step];
 
-      {/* Meaning slots (drop targets) */}
-      <div className="space-y-3">
-        {question.pairs.map((pair, slotIdx) => {
-          const assignedWordIdx = assignments[slotIdx];
-          const assignedWord =
-            assignedWordIdx !== undefined
-              ? question.pairs[assignedWordIdx]
-              : null;
-          const isCorrect = results[slotIdx];
-          const isWrong = submitted && results[slotIdx] === false;
-
-          return (
-            <div
-              key={slotIdx}
-              onDragOver={!submitted ? handleDragOver : undefined}
-              onDrop={!submitted ? handleDrop(slotIdx) : undefined}
-              onTouchEnd={!submitted ? handleTouchEnd(slotIdx) : undefined}
-              className={`flex items-center gap-3 p-3 rounded-xl border-2 border-dashed transition-all min-h-[52px] ${
-                isCorrect
-                  ? "border-secondary bg-secondary/5"
-                  : isWrong
-                    ? "border-error bg-error/5"
-                    : assignedWord
-                      ? "border-primary/50 bg-primary/5"
-                      : dragging !== null && !submitted
-                        ? "border-primary/30 bg-primary/5"
-                        : "border-outline-variant/40 bg-surface-container-low"
-              }`}
-            >
-              {/* Meaning (always visible) */}
-              <p className="flex-1 text-[13px] text-on-surface">
-                {pair.meaning}
-              </p>
-
-              {/* Assigned word chip or empty slot */}
-              {assignedWord ? (
-                <div
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-semibold ${
-                    isCorrect
-                      ? "bg-secondary/10 text-secondary"
-                      : isWrong
-                        ? "bg-error/10 text-error"
-                        : "bg-primary/10 text-primary"
-                  }`}
-                >
-                  {isCorrect ? (
-                    <CheckCircle2 size={12} />
-                  ) : isWrong ? (
-                    <XCircle size={12} />
-                  ) : null}
-                  {assignedWord.word}
-                </div>
-              ) : (
-                <div className="w-20 h-8 rounded-lg border border-outline-variant/30 flex items-center justify-center">
-                  <span className="text-[11px] text-outline/40">drop here</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Submit */}
-      {!submitted && (
-        <button
-          onClick={handleSubmit}
-          disabled={!allAssigned}
-          className="w-full h-11 mt-6 rounded-xl bg-primary text-[14px] font-medium text-on-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-        >
-          Check All
-        </button>
-      )}
-
-      {/* Results summary */}
-      {submitted && (
-        <div className="mt-4">
-          <p className="text-[14px] font-medium text-on-surface mb-1">
-            {Object.values(results).filter(Boolean).length} /{" "}
-            {question.pairs.length} correct
-          </p>
-          {question.pairs.map((pair, i) => (
-            <p key={i} className="text-[12px] text-outline">
-              {pair.word} → {pair.meaning}
-            </p>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============ MAIN QUIZ COMPONENT ============
-export function Quiz({ words, onComplete }: QuizProps) {
-  const questions = useMemo(() => generateQuestions(words), [words]);
-  const [qIndex, setQIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [answered, setAnswered] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [isCorrect, setIsCorrect] = useState(false);
-
-  const question = questions[qIndex];
-  const totalQuestions = questions.length;
-  const progress = ((qIndex + (answered ? 1 : 0)) / totalQuestions) * 100;
-
-  function handleQuickFireOption(optionIndex: number) {
-    if (answered || !question || question.type !== "quickfire") return;
-    const correct = optionIndex === question.correctIndex;
-    setAnswered(true);
-    setIsCorrect(correct);
-    setSelectedAnswer(optionIndex);
-    if (correct) setScore((s) => s + 1);
+  if (totalSteps === 0) {
+    onComplete(0, 0);
+    return null;
   }
 
-  function handleDragDropComplete(correctCount: number) {
-    setScore((s) => s + correctCount);
-    setAnswered(true);
-    if (question.type === "dragdrop") {
-      setIsCorrect(correctCount === question.pairs.length);
+  function handleSelect(letter: string) {
+    if (submitted) return;
+    setSelected(letter);
+  }
+
+  function handleSubmit() {
+    if (!selected || !currentMcq) return;
+    setSubmitted(true);
+    if (selected === currentMcq.answer) {
+      setMcqScore((s) => s + 1);
     }
   }
 
   function handleNext() {
-    if (qIndex + 1 >= totalQuestions) {
-      onComplete(score, totalQuestions);
+    setSelected(null);
+    setSubmitted(false);
+    
+    if (step + 1 >= totalSteps) {
+      onComplete(mcqScore, mcqs.length);
     } else {
-      setQIndex((i) => i + 1);
-      setAnswered(false);
-      setSelectedAnswer(null);
-      setIsCorrect(false);
+      setStep((s) => s + 1);
     }
   }
 
-  if (!question) {
-    onComplete(score, 0);
-    return null;
+  function handleMatchingComplete(matchingScore: number, matchingTotal: number) {
+    onComplete(mcqScore + matchingScore, mcqs.length + matchingTotal);
   }
 
+  // RENDER DRAG & DROP MATCHING STEP
+  if (step === mcqs.length && matchPairs.length > 0) {
+    return (
+      <div className="min-h-screen bg-surface dark:bg-[#0a0a0b]">
+        <div className="section-wrap pt-6 pb-12">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[13px] font-medium text-primary flex items-center gap-1 dark:text-[#60a5fa]">
+              <BookOpen size={13} />
+              Final Challenge
+            </span>
+            <span className="text-[13px] text-outline dark:text-white/50">
+              Step {step + 1} / {totalSteps}
+            </span>
+          </div>
+
+          <div className="w-full h-1.5 bg-surface-container rounded-full overflow-hidden mb-6 dark:bg-white/[0.06]">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-300 dark:bg-[#60a5fa]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          <MatchingQuiz pairs={matchPairs} onComplete={handleMatchingComplete} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentMcq) return null;
+  const isCorrect = selected === currentMcq.answer;
+
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface dark:bg-[#0a0a0b]">
       <div className="section-wrap pt-6 pb-12">
-        {/* Header */}
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[13px] font-medium text-primary">
+          <span className="text-[13px] font-medium text-primary dark:text-[#60a5fa]">
             Quiz Time
           </span>
-          <span className="text-[13px] text-outline">
-            {qIndex + 1} / {totalQuestions}
+          <span className="text-[13px] text-outline dark:text-white/50">
+            Step {step + 1} / {totalSteps}
           </span>
         </div>
 
-        {/* Progress bar */}
-        <div className="w-full h-1.5 bg-surface-container rounded-full overflow-hidden mb-6">
+        <div className="w-full h-1.5 bg-surface-container rounded-full overflow-hidden mb-6 dark:bg-white/[0.06]">
           <div
-            className="h-full bg-primary rounded-full transition-all duration-300"
+            className="h-full bg-primary rounded-full transition-all duration-300 dark:bg-[#60a5fa]"
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        {/* Question Type Badge */}
         <div className="mb-4">
-          <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-[12px] font-medium text-primary">
-            {question.type === "dragdrop"
-              ? "Word Match"
-              : "Quick Fire"}
+          <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-[12px] font-medium text-primary dark:bg-[#60a5fa]/10 dark:text-[#60a5fa]">
+            Multiple Choice
           </span>
         </div>
 
-        {/* DRAG AND DROP */}
-        {question.type === "dragdrop" && (
-          <DragDropQuestion
-            question={question}
-            onComplete={handleDragDropComplete}
-          />
-        )}
+        <div className="mb-6">
+          <p className="text-[15px] text-on-surface leading-relaxed mb-1 font-medium dark:text-white">
+            {currentMcq.question}
+          </p>
+        </div>
 
-        {/* QUICK FIRE */}
-        {question.type === "quickfire" && (
-          <div>
-            <p className="text-[18px] font-display font-semibold text-on-surface mb-1">
-              {question.word.word}
-            </p>
-            <p className="text-[12px] text-outline mb-4">
-              {question.word.partOfSpeech} &middot;{" "}
-              {question.word.hindiMeaning}
-            </p>
-            <p className="text-[14px] text-outline mb-4">
-              What does this word mean?
-            </p>
-            <div className="space-y-2">
-              {question.options.map((opt, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleQuickFireOption(i)}
-                  disabled={answered}
-                  className={`w-full rounded-xl border-2 p-4 text-left transition-all text-[14px] ${
-                    answered && i === question.correctIndex
-                      ? "border-secondary bg-secondary/5 text-secondary font-medium"
-                      : answered && i === selectedAnswer && !isCorrect
-                        ? "border-error bg-error/5 text-error"
-                        : "border-outline-variant bg-white hover:border-primary/50"
+        <div className="space-y-2 mb-6">
+          {(["a", "b", "c", "d"] as const).map((letter) => {
+            const text = currentMcq.options[letter];
+            const isSelected = selected === letter;
+            const isAnswer = letter === currentMcq.answer;
+
+            let borderClass = "border-outline-variant bg-surface dark:bg-surface-container dark:border-white/[0.08] hover:border-primary/45 dark:hover:border-[#60a5fa]/40 hover:scale-[1.005]";
+            if (submitted && isAnswer) {
+              borderClass = "border-emerald-500/40 bg-emerald-500/5 dark:border-[#34d399]/40 dark:bg-[#34d399]/[0.04]";
+            } else if (submitted && isSelected && !isAnswer) {
+              borderClass = "border-red-500/40 bg-red-500/5 dark:border-red-500/30 dark:bg-red-500/[0.04]";
+            } else if (isSelected) {
+              borderClass = "border-primary bg-primary/5 dark:border-[#60a5fa] dark:bg-[#60a5fa]/[0.04]";
+            }
+
+            return (
+              <button
+                key={letter}
+                onClick={() => handleSelect(letter)}
+                disabled={submitted}
+                className={`w-full rounded-xl border p-4 text-left transition-all flex items-start gap-3 active:scale-[0.99] disabled:active:scale-100 ${borderClass}`}
+              >
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[12px] font-black ${
+                    submitted && isAnswer
+                      ? "bg-gradient-to-br from-emerald-500 to-green-600 text-white"
+                      : submitted && isSelected && !isAnswer
+                        ? "bg-red-500 text-white"
+                        : isSelected
+                          ? "bg-primary text-on-primary dark:bg-[#60a5fa] dark:text-[#0c1929]"
+                          : "bg-surface-container text-outline/80 dark:bg-white/[0.04] dark:text-white/40"
                   }`}
                 >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
+                  {letter.toUpperCase()}
+                </span>
+                <span
+                  className={`text-[13.5px] font-bold pt-0.5 ${
+                    submitted && isAnswer
+                      ? "text-secondary dark:text-[#34d399]"
+                      : submitted && isSelected && !isAnswer
+                        ? "text-red-500 dark:text-red-400"
+                        : "text-on-surface dark:text-white"
+                  }`}
+                >
+                  {text}
+                </span>
+                {submitted && isAnswer && (
+                  <CheckCircle2
+                    size={16}
+                    className="text-secondary shrink-0 mt-0.5 ml-auto dark:text-[#34d399] stroke-[3]"
+                  />
+                )}
+                {submitted && isSelected && !isAnswer && (
+                  <XCircle
+                    size={16}
+                    className="text-red-500 shrink-0 mt-0.5 ml-auto dark:text-red-400 stroke-[3]"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {!submitted && (
+          <button
+            onClick={handleSubmit}
+            disabled={!selected}
+            className="w-full h-12 rounded-xl bg-primary text-[14px] font-medium text-on-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all dark:bg-[#60a5fa] dark:text-[#0c1929]"
+          >
+            Submit
+          </button>
         )}
 
-        {/* Feedback + Next (for quickfire and dragdrop after submit) */}
-        {answered && question.type === "quickfire" && (
-          <div className="mt-6">
+        {submitted && (
+          <div className="mt-2">
             <div
               className={`flex items-center gap-2 p-3 rounded-xl mb-4 ${
-                isCorrect ? "bg-secondary/10" : "bg-error/10"
+                isCorrect ? "bg-secondary/10 dark:bg-[#34d399]/[0.08]" : "bg-error/10 dark:bg-[#f87171]/[0.08]"
               }`}
             >
               {isCorrect ? (
-                <CheckCircle2 size={18} className="text-secondary shrink-0" />
+                <CheckCircle2 size={18} className="text-secondary shrink-0 dark:text-[#34d399]" />
               ) : (
-                <XCircle size={18} className="text-error shrink-0" />
+                <XCircle size={18} className="text-error shrink-0 dark:text-[#f87171]" />
               )}
               <p
                 className={`text-[14px] font-medium ${
-                  isCorrect ? "text-secondary" : "text-error"
+                  isCorrect ? "text-secondary dark:text-[#34d399]" : "text-error dark:text-[#f87171]"
                 }`}
               >
-                {isCorrect ? "Correct!" : "Not quite"}
+                {isCorrect ? "Correct!" : `Wrong — Answer: ${currentMcq.options[currentMcq.answer as keyof typeof currentMcq.options]}`}
               </p>
-              {!isCorrect && (
-                <p className="text-[13px] text-outline ml-auto">
-                  {question.word.meaning}
-                </p>
-              )}
             </div>
 
             <button
               onClick={handleNext}
-              className="w-full h-12 rounded-xl bg-primary text-[14px] font-medium text-on-primary flex items-center justify-center gap-2 transition-all hover:bg-primary-hover"
+              className="w-full h-12 rounded-xl bg-primary text-[14px] font-medium text-on-primary flex items-center justify-center gap-2 transition-all hover:bg-primary-hover dark:bg-[#60a5fa] dark:text-[#0c1929] dark:hover:bg-[#60a5fa]/90"
             >
-              {qIndex + 1 >= totalQuestions ? "See Results" : "Next"}
+              {step + 1 >= totalSteps ? "See Results" : "Next"}
               <ArrowRight size={16} />
             </button>
           </div>
         )}
 
-        {answered && question.type === "dragdrop" && (
-          <div className="mt-6">
-            <button
-              onClick={handleNext}
-              className="w-full h-12 rounded-xl bg-primary text-[14px] font-medium text-on-primary flex items-center justify-center gap-2 transition-all hover:bg-primary-hover"
-            >
-              {qIndex + 1 >= totalQuestions ? "See Results" : "Next"}
-              <ArrowRight size={16} />
-            </button>
-          </div>
-        )}
-
-        {/* Score indicator */}
         <div className="flex items-center justify-center gap-1 mt-4">
-          {Array.from({ length: totalQuestions }).map((_, i) => (
+          {Array.from({ length: totalSteps }).map((_, i) => (
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all ${
-                i < qIndex
-                  ? "w-4 bg-primary"
-                  : i === qIndex
-                    ? "w-4 bg-primary/50"
-                    : "w-4 bg-outline-variant"
+                i < step
+                  ? "w-4 bg-primary dark:bg-[#60a5fa]"
+                  : i === step
+                    ? "w-4 bg-primary/50 dark:bg-[#60a5fa]/50"
+                    : "w-4 bg-outline-variant dark:bg-white/20"
               }`}
             />
           ))}

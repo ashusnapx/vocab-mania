@@ -33,18 +33,18 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center px-4">
+      <div className="min-h-screen bg-surface dark:bg-[#0a0a0b] flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <div className="card-surface p-8">
-            <p className="font-display text-[20px] font-semibold text-on-surface mb-2">
+            <p className="font-display text-[20px] font-semibold text-on-surface dark:text-white mb-2">
               Check your email
             </p>
-            <p className="text-[14px] text-outline mb-6">
+            <p className="text-[14px] text-outline dark:text-white/50 mb-6">
               We sent a password reset link to <strong>{email}</strong>.
             </p>
             <Link
               href="/login"
-              className="text-[14px] text-primary font-medium hover:underline"
+              className="text-[14px] text-primary font-medium hover:underline dark:text-[#60a5fa]"
             >
               Back to sign in
             </Link>
@@ -55,17 +55,17 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-surface dark:bg-[#0a0a0b] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Link href="/login" className="inline-flex items-center gap-1.5 text-[13px] text-outline hover:text-on-surface transition-colors mb-6">
+          <Link href="/login" className="inline-flex items-center gap-1.5 text-[13px] text-outline hover:text-on-surface transition-colors mb-6 dark:text-white/50 dark:hover:text-white">
             <ArrowLeft size={14} />
             Back to sign in
           </Link>
-          <h1 className="font-display text-[24px] font-semibold text-on-surface mb-1">
+          <h1 className="font-display text-[24px] font-semibold text-on-surface dark:text-white mb-1">
             Reset password
           </h1>
-          <p className="text-[14px] text-outline">
+          <p className="text-[14px] text-outline dark:text-white/50">
             Enter your email and we&apos;ll send you a reset link
           </p>
         </div>
@@ -77,17 +77,17 @@ export default function ForgotPasswordPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full h-12 px-4 rounded-xl border border-outline-variant/40 text-[14px] text-on-surface placeholder:text-outline bg-surface transition-colors focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+            className="w-full h-12 px-4 rounded-xl border border-outline-variant/40 text-[14px] text-on-surface placeholder:text-outline bg-surface transition-colors focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-white/[0.1] dark:text-white dark:placeholder:text-white/30 dark:bg-white/[0.04] dark:focus:border-[#60a5fa]"
           />
 
           {error && (
-            <p className="text-[13px] text-error">{error}</p>
+            <p className="text-[13px] text-error dark:text-[#f87171]">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 rounded-xl bg-primary text-[14px] font-medium text-on-primary transition-all hover:bg-primary-hover active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full h-12 rounded-xl bg-primary text-[14px] font-medium text-on-primary transition-all hover:bg-primary-hover active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 dark:bg-[#60a5fa] dark:text-[#0c1929] dark:hover:bg-[#60a5fa]/90"
           >
             {loading ? "Sending..." : "Send reset link"}
             {!loading && <ArrowRight size={16} />}

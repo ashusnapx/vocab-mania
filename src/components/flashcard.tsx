@@ -1,35 +1,48 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Star, Eye, ArrowRight, RotateCcw } from "lucide-react";
-import type { Word } from "@/lib/words";
+import { Star, ArrowRight, RotateCcw, CornerDownRight } from "lucide-react";
 
 interface FlashcardProps {
-  word: Word;
-  onAction: (action: "know" | "dont_know" | "vault") => void;
+  pair: Record<string, unknown>;
+  onAction: (action: "know" | "vault" | "dont_know") => void;
   disabled?: boolean;
 }
 
-export function Flashcard({ word, onAction, disabled }: FlashcardProps) {
+export function Flashcard({ pair, onAction, disabled }: FlashcardProps) {
   const [flipped, setFlipped] = useState(false);
 
   const handleFlip = useCallback(() => {
-    setFlipped((f) => !f);
-  }, []);
+    if (!disabled) setFlipped((f) => !f);
+  }, [disabled]);
 
   const handleAction = useCallback(
-    (action: "know" | "dont_know" | "vault") => (e: React.MouseEvent) => {
+    (action: "know" | "vault" | "dont_know") => (e: React.MouseEvent) => {
       e.stopPropagation();
       onAction(action);
     },
     [onAction]
   );
 
+  const id = pair.id as number;
+  const word1 = (pair.word1 as string) ?? "";
+  const pos1 = (pair.pos1 as string) ?? "";
+  const meaning1 = (pair.meaning1 as string) ?? "";
+  const hindi1 = (pair.hindi1 as string) ?? "";
+  const word2 = (pair.word2 as string) ?? "";
+  const pos2 = (pair.pos2 as string) ?? "";
+  const meaning2 = (pair.meaning2 as string) ?? "";
+  const hindi2 = (pair.hindi2 as string) ?? "";
+
   return (
-    <div className="w-full max-w-lg mx-auto" style={{ perspective: "1200px" }}>
+    <div className="w-full max-w-md mx-auto" style={{ perspective: "1200px" }}>
       <div
         className="relative w-full cursor-pointer"
-        style={{ transformStyle: "preserve-3d", transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" , transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
+        style={{
+          transformStyle: "preserve-3d",
+          transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+          transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+        }}
         onClick={handleFlip}
         role="button"
         tabIndex={0}
@@ -40,166 +53,147 @@ export function Flashcard({ word, onAction, disabled }: FlashcardProps) {
           }
         }}
       >
-        {/* ===== FRONT FACE ===== */}
+        
+        {/* ===== DESIGNER FRONT FACE ===== */}
         <div
-          className="absolute inset-0 w-full rounded-[20px] border border-outline-variant/20 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)]"
-          style={{ backfaceVisibility: "hidden", pointerEvents: flipped ? "none" : "auto" }}
+          className="absolute inset-0 w-full rounded-[24px] border border-emerald-500/10 bg-surface shadow-md dark:bg-[#121215] dark:border-white/[0.04] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)] flex flex-col justify-between overflow-hidden"
+          style={{
+            backfaceVisibility: "hidden",
+            pointerEvents: flipped ? "none" : "auto",
+            backgroundImage: "radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.03) 0%, transparent 50%)",
+          }}
         >
-          {/* Top accent bar */}
-          <div className="h-1.5 w-full rounded-t-[20px] bg-gradient-to-r from-primary via-secondary to-tertiary" />
+          <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 via-[#fbbf24] to-emerald-600" />
 
-          <div className="flex flex-col items-center justify-center px-8 py-16">
-            {/* Part of speech badge */}
-            <span className="mb-4 rounded-full bg-primary/8 px-3 py-1 text-[11px] font-semibold tracking-wide uppercase text-primary">
-              {word.partOfSpeech}
+          {/* Top category details */}
+          <div className="px-6 pt-5 flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-outline/50 uppercase dark:text-white/30">
+              Precision Pathway
             </span>
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/10 dark:text-[#34d399] uppercase tracking-wider">
+              Pair #{id}
+            </span>
+          </div>
 
-            {/* Word */}
-            <h2 className="font-display text-[40px] font-bold leading-tight text-on-surface text-center mb-1">
-              {word.word}
-            </h2>
-
-            {/* Pronunciation */}
-            <p className="text-[14px] text-outline mb-5 font-mono">
-              {word.pronunciation}
-            </p>
-
-            {/* Year badges */}
-            {word.yearsAsked && word.yearsAsked.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-1.5 mb-8">
-                {word.yearsAsked.map((yr) => (
-                  <span
-                    key={yr}
-                    className="rounded-md bg-tertiary/8 px-2 py-0.5 text-[11px] font-medium text-tertiary"
-                  >
-                    CGL {yr}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Tap hint */}
-            <div className="flex items-center gap-2 text-[13px] text-outline/70">
-              <Eye size={14} />
-              Tap to reveal meaning
+          {/* Homonym word comparison block */}
+          <div className="px-6 py-14 flex items-center justify-center gap-4">
+            <div className="text-center space-y-1 flex-1">
+              <h2 className="font-display text-[28px] font-black text-on-surface dark:text-white leading-tight">
+                {word1}
+              </h2>
+              <span className="inline-block text-[10px] font-mono font-bold text-emerald-600 dark:text-[#34d399] bg-emerald-500/5 px-2 py-0.5 rounded-md">
+                {pos1}
+              </span>
             </div>
+
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-container border border-outline-variant/35 text-[11px] font-black text-outline/80 dark:bg-white/[0.03] dark:border-white/10 dark:text-white/50">
+              vs
+            </div>
+
+            <div className="text-center space-y-1 flex-1">
+              <h2 className="font-display text-[28px] font-black text-on-surface dark:text-white leading-tight">
+                {word2}
+              </h2>
+              <span className="inline-block text-[10px] font-mono font-bold text-emerald-600 dark:text-[#34d399] bg-emerald-500/5 px-2 py-0.5 rounded-md">
+                {pos2}
+              </span>
+            </div>
+          </div>
+
+          {/* Prompt */}
+          <div className="px-6 pb-5 flex justify-center items-center gap-1.5 text-[11px] font-mono font-bold text-outline/65 dark:text-white/30 border-t border-outline-variant/10 dark:border-white/[0.03] pt-3.5">
+            <RotateCcw size={12} className="animate-pulse" />
+            <span>Click card to reveal definitions</span>
           </div>
         </div>
 
-        {/* ===== BACK FACE ===== */}
+        {/* ===== DESIGNER BACK FACE ===== */}
         <div
-          className="w-full rounded-[20px] border border-outline-variant/20 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)]"
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", pointerEvents: flipped ? "auto" : "none" }}
+          className="w-full rounded-[24px] border border-emerald-500/10 bg-surface shadow-md dark:bg-[#121215] dark:border-white/[0.04] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)] flex flex-col justify-between overflow-hidden"
+          style={{
+            backfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+            pointerEvents: flipped ? "auto" : "none",
+            backgroundImage: "radial-gradient(circle at 90% 90%, rgba(16, 185, 129, 0.02) 0%, transparent 60%)",
+          }}
         >
-          {/* Top accent bar */}
-          <div className="h-1.5 w-full rounded-t-[20px] bg-gradient-to-r from-secondary via-primary to-tertiary" />
+          <div className="h-1.5 w-full bg-gradient-to-r from-emerald-600 via-[#fbbf24] to-emerald-500" />
 
-          <div className="p-6">
-            {/* Word header */}
-            <div className="mb-4">
-              <h2 className="font-display text-[26px] font-bold text-on-surface mb-1">
-                {word.word}
-              </h2>
-              <div className="flex gap-2">
-                <span className="rounded-full bg-primary/8 px-2.5 py-0.5 text-[11px] font-semibold uppercase text-primary">
-                  {word.partOfSpeech}
-                </span>
-                {word.yearsAsked && word.yearsAsked.length > 0 && (
-                  <span className="rounded-full bg-tertiary/8 px-2.5 py-0.5 text-[11px] font-medium text-tertiary">
-                    CGL {word.yearsAsked.join(", ")}
-                  </span>
-                )}
+          <div className="p-6 space-y-5 text-left">
+            
+            {/* Word 1 card segment */}
+            <div className="p-4 rounded-xl border border-emerald-500/10 bg-emerald-500/[0.01] dark:bg-white/[0.01] space-y-2">
+              <div className="flex items-baseline gap-2 border-b border-outline-variant/10 pb-1.5 dark:border-white/[0.03]">
+                <h4 className="font-display text-[16px] font-black text-emerald-600 dark:text-[#34d399]">
+                  {word1}
+                </h4>
+                <span className="text-[10px] font-mono font-bold text-outline/65">({pos1})</span>
               </div>
+              <p className="text-[13.5px] font-medium leading-relaxed text-on-surface dark:text-white">
+                {meaning1}
+              </p>
+              {hindi1 && (
+                <div className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-700 px-2 py-0.5 rounded-lg text-[12px] font-black dark:bg-[#34d399]/15 dark:text-[#34d399]">
+                  <CornerDownRight size={11} className="stroke-[2.5]" />
+                  <span>{hindi1}</span>
+                </div>
+              )}
             </div>
 
-            {/* Hindi meaning */}
-            <div className="mb-3 rounded-xl bg-primary/5 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary mb-0.5">
-                Hindi
-              </p>
-              <p className="text-[18px] font-semibold text-primary">{word.hindiMeaning}</p>
-            </div>
-
-            {/* English meaning */}
-            <div className="mb-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-outline mb-0.5">
-                English
-              </p>
-              <p className="text-[15px] text-on-surface leading-relaxed">{word.meaning}</p>
-            </div>
-
-            {/* Example */}
-            <div className="rounded-xl bg-surface-container-low px-4 py-3 mb-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-outline mb-1">
-                Example
-              </p>
-              <p className="text-[14px] text-on-surface italic leading-relaxed">
-                &ldquo;{word.example}&rdquo;
-              </p>
-            </div>
-
-            {/* Synonyms + Antonyms */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="rounded-xl bg-secondary/5 px-3 py-2.5 border border-secondary/10">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-secondary mb-1">
-                  Synonyms
-                </p>
-                <p className="text-[12px] text-on-surface leading-relaxed">
-                  {word.synonyms.join(", ")}
-                </p>
+            {/* Word 2 card segment */}
+            <div className="p-4 rounded-xl border border-indigo-500/10 bg-indigo-500/[0.01] dark:bg-white/[0.01] space-y-2">
+              <div className="flex items-baseline gap-2 border-b border-outline-variant/10 pb-1.5 dark:border-white/[0.03]">
+                <h4 className="font-display text-[16px] font-black text-indigo-600 dark:text-[#60a5fa]">
+                  {word2}
+                </h4>
+                <span className="text-[10px] font-mono font-bold text-outline/65">({pos2})</span>
               </div>
-              <div className="rounded-xl bg-error/5 px-3 py-2.5 border border-error/10">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-error mb-1">
-                  Antonyms
-                </p>
-                <p className="text-[12px] text-on-surface leading-relaxed">
-                  {word.antonyms.join(", ")}
-                </p>
-              </div>
-            </div>
-
-            {/* Root */}
-            <div className="rounded-xl bg-tertiary/5 px-3 py-2.5 border border-tertiary/10 mb-5">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-tertiary mb-1">
-                Root
+              <p className="text-[13.5px] font-medium leading-relaxed text-on-surface dark:text-white">
+                {meaning2}
               </p>
-              <p className="text-[12px] text-on-surface leading-relaxed">{word.root}</p>
+              {hindi2 && (
+                <div className="inline-flex items-center gap-1 bg-indigo-500/10 text-indigo-600 px-2 py-0.5 rounded-lg text-[12px] font-black dark:bg-indigo-500/15 dark:text-[#60a5fa]">
+                  <CornerDownRight size={11} className="stroke-[2.5]" />
+                  <span>{hindi2}</span>
+                </div>
+              )}
             </div>
 
-            {/* Actions — stopPropagation prevents card flip */}
-            <div className="flex gap-3">
+            {/* Actions */}
+            <div className="flex gap-2.5 pt-3 border-t border-outline-variant/10 dark:border-white/[0.03]">
               <button
                 onClick={handleAction("dont_know")}
                 disabled={disabled}
-                className="flex-1 h-11 rounded-xl border-2 border-outline-variant/30 text-[13px] font-semibold text-on-surface/80 transition-all hover:bg-surface-container-lowest hover:border-outline-variant/50 active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 h-10 rounded-xl border border-red-500/30 bg-red-500/5 text-[12px] font-bold text-red-600 hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed dark:border-red-500/20 dark:text-red-400 dark:bg-red-500/10 transition-all"
               >
                 Don&apos;t Know
               </button>
               <button
                 onClick={handleAction("vault")}
                 disabled={disabled}
-                className="h-11 px-4 rounded-xl border-2 border-tertiary/25 text-[13px] font-semibold text-tertiary transition-all hover:bg-tertiary/5 active:scale-[0.97] flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-10 px-3.5 rounded-xl border border-amber-500/30 bg-amber-500/5 text-[12px] font-bold text-amber-600 hover:bg-amber-500/10 active:scale-[0.97] flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed dark:border-amber-500/20 dark:text-[#fbbf24] dark:bg-amber-500/10 transition-all"
               >
-                <Star size={15} />
+                <Star size={13} className="fill-current" />
                 Vault
               </button>
               <button
                 onClick={handleAction("know")}
                 disabled={disabled}
-                className="flex-1 h-11 rounded-xl bg-primary text-[13px] font-semibold text-on-primary transition-all hover:bg-primary/90 active:scale-[0.97] flex items-center justify-center gap-1.5 shadow-[0_1px_4px_rgba(37,99,235,0.25)] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-[12.5px] font-bold text-white hover:opacity-95 active:scale-[0.97] flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/10 disabled:opacity-40 disabled:cursor-not-allowed dark:from-[#34d399] dark:to-[#059669] dark:text-[#022c22] transition-all"
               >
                 Know This
-                <ArrowRight size={14} />
+                <ArrowRight size={13} />
               </button>
             </div>
 
-            {/* Flip back hint */}
-            <div className="flex items-center justify-center gap-1.5 mt-4 text-[12px] text-outline/50">
-              <RotateCcw size={12} />
-              Tap card to flip back
+            {/* Back flip prompts */}
+            <div className="flex items-center justify-center gap-1 mt-2 text-[11px] font-mono font-bold text-outline/50 dark:text-white/20">
+              <RotateCcw size={11} />
+              <span>Click card to inspect front face</span>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );

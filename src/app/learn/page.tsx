@@ -1,584 +1,293 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useUser } from "@/lib/auth-context";
-import { generateId } from "@/lib/id";
-import { Flashcard } from "@/components/flashcard";
-import { Quiz } from "@/components/quiz";
-import { ProgressBar } from "@/components/progress-bar";
-import { WORD_DATABASE } from "@/lib/words";
-import type { Word } from "@/lib/words";
-import { calculateQuizXP } from "@/lib/xp";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { FOLDERS } from "@/lib/folders";
+import {
+  useFolderStats,
+  useFolderSettings,
+  useUpdateFolderSettings,
+  loadLocalSessionCounts,
+  saveLocalSessionCounts,
+} from "@/lib/queries";
+import { ArrowLeft, Play, Sparkles, Plus, Minus, Info } from "lucide-react";
 import Link from "next/link";
-
-interface ProgressRow {
-  id: string;
-  word_id: string;
-  status: string;
-  next_review_at: string | null;
-  repetitions: number;
-  ease_factor: number;
-  interval: number;
-  times_incorrect: number;
-  times_correct: number;
-}
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+import { useRouter } from "next/navigation";
 
 export default function LearnPage() {
   const { user, loading } = useUser();
-  const supabase = createClient();
+  const router = useRouter();
 
-  const [queue, setQueue] = useState<Word[]>([]);
-  const [pos, setPos] = useState(0);
-  const [sessionComplete, setSessionComplete] = useState(false);
-  const [sessionLoading, setSessionLoading] = useState(true);
-  const [sessionData, setSessionData] = useState<{
-    id: string;
-    startedAt: Date;
-  } | null>(null);
-  const [completedStats, setCompletedStats] = useState<{
-    ikCount: number;
-    vaultCount: number;
-    total: number;
-    earnedXP: number;
-  } | null>(null);
-  const [ikCount, setIkCount] = useState(0);
-  const [vaultCount, setVaultCount] = useState(0);
-  const [totalWords, setTotalWords] = useState(0);
-  const [phase, setPhase] = useState<"flashcards" | "quiz" | "complete">(
-    "flashcards"
+  const { data: folderStats = {} } = useFolderStats(user?.id);
+  const { data: dbSettings = {} } = useFolderSettings(user?.id);
+  const updateSettings = useUpdateFolderSettings(user?.id);
+
+  // Session counts: localStorage first, then merge DB
+  const [sessionCounts, setSessionCounts] = useState<Record<string, number>>(
+    loadLocalSessionCounts
   );
-  const [ikWords, setIkWords] = useState<Word[]>([]);
-  const [quizResult, setQuizResult] = useState<{
-    score: number;
-    total: number;
-  } | null>(null);
-  const [processing, setProcessing] = useState(false);
 
-  const idkCountRef = useRef(0);
-  const countsRef = useRef({ ik: 0, vault: 0, total: 0 });
-  const ikWordsRef = useRef<Word[]>([]);
-  const posRef = useRef(0);
-
-  // Keep posRef in sync
+  // Merge DB settings into session counts
+  const dbSettingsApplied = useRef(false);
   useEffect(() => {
-    posRef.current = pos;
-  }, [pos]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const buildSession = async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("daily_goal")
-        .eq("id", user.id)
-        .single();
-
-      const dailyGoal = profile?.daily_goal || 10;
-
-      const { data: progress } = await supabase
-        .from("user_progress")
-        .select("word_id, status, next_review_at")
-        .eq("user_id", user.id);
-
-      const { data: vault } = await supabase
-        .from("memory_vault")
-        .select("word_id")
-        .eq("user_id", user.id);
-
-      const typedProgress = (progress || []) as ProgressRow[];
-      const progressMap = new Map<string, ProgressRow>(
-        typedProgress.map((p) => [p.word_id, p])
-      );
-      const vaultWordIds = new Set(
-        vault?.map((v: { word_id: string }) => v.word_id) || []
-      );
-      const masteredIds = new Set(
-        typedProgress
-          .filter((p) => p.status === "mastered")
-          .map((p) => p.word_id)
-      );
-
-      // Categorize all available (non-mastered) words
-      const reviewWords: Word[] = [];
-      const newWords: Word[] = [];
-      const vaultedFromDB: Word[] = [];
-
-      for (const word of WORD_DATABASE) {
-        if (masteredIds.has(word.id)) continue;
-        const p = progressMap.get(word.id);
-        if (vaultWordIds.has(word.id)) {
-          vaultedFromDB.push(word);
-        } else if (!p) {
-          newWords.push(word);
-        } else if (
-          p.next_review_at &&
-          new Date(p.next_review_at) <= new Date()
-        ) {
-          reviewWords.push(word);
-        }
-      }
-
-      // Build pool to EXACTLY dailyGoal words
-      // Priority: vaulted words first, then review, then new, then fill from remaining
-      const pool: Word[] = [];
-      const usedIds = new Set<string>();
-
-      // 1. Add vaulted words (up to 20% of goal, max all available)
-      const vaultLimit = Math.min(
-        vaultedFromDB.length,
-        Math.ceil(dailyGoal * 0.2)
-      );
-      for (const w of shuffle(vaultedFromDB).slice(0, vaultLimit)) {
-        pool.push(w);
-        usedIds.add(w.id);
-      }
-
-      // 2. Add review words (up to 40% of goal)
-      const reviewLimit = Math.ceil(dailyGoal * 0.4);
-      for (const w of shuffle(reviewWords).slice(0, reviewLimit)) {
-        if (pool.length >= dailyGoal) break;
-        if (!usedIds.has(w.id)) {
-          pool.push(w);
-          usedIds.add(w.id);
-        }
-      }
-
-      // 3. Add new words (up to 40% of goal)
-      const newLimit = Math.ceil(dailyGoal * 0.4);
-      for (const w of shuffle(newWords).slice(0, newLimit)) {
-        if (pool.length >= dailyGoal) break;
-        if (!usedIds.has(w.id)) {
-          pool.push(w);
-          usedIds.add(w.id);
-        }
-      }
-
-      // 4. Fill remaining from any non-mastered, non-used word
-      if (pool.length < dailyGoal) {
-        const allAvailable = WORD_DATABASE.filter(
-          (w) => !masteredIds.has(w.id) && !usedIds.has(w.id)
-        );
-        for (const w of shuffle(allAvailable)) {
-          if (pool.length >= dailyGoal) break;
-          pool.push(w);
-          usedIds.add(w.id);
-        }
-      }
-
-      // Final shuffle for variety
-      const finalPool = shuffle(pool);
-
-      setTotalWords(finalPool.length);
-      setIkCount(0);
-      setVaultCount(0);
-      idkCountRef.current = 0;
-      countsRef.current = { ik: 0, vault: 0, total: finalPool.length };
-
-      setQueue(finalPool);
-      setPos(0);
-      posRef.current = 0;
-
-      const sessionId = generateId();
-      const { data: sessionRecord } = await supabase
-        .from("learning_sessions")
-        .insert({
-          id: sessionId,
-          user_id: user.id,
-          session_type: "learn",
-          words_seen: finalPool.length,
-        })
-        .select("id")
-        .single();
-
-      if (sessionRecord) {
-        setSessionData({ id: sessionRecord.id, startedAt: new Date() });
-      }
-
-      setSessionLoading(false);
-    };
-
-    buildSession();
-  }, [user, supabase]);
-
-  const finalizeSession = useCallback(
-    async (quizScore?: { score: number; total: number }) => {
-      if (sessionData) {
-        const duration = Math.round(
-          (Date.now() - sessionData.startedAt.getTime()) / 1000
-        );
-        await supabase
-          .from("learning_sessions")
-          .update({
-            words_correct: countsRef.current.ik,
-            words_incorrect: idkCountRef.current,
-            duration_seconds: duration,
-            completed_at: new Date().toISOString(),
-          })
-          .eq("id", sessionData.id);
-      }
-
-      const today = new Date().toISOString().split("T")[0];
-      await supabase
-        .from("profiles")
-        .update({ last_active_date: today })
-        .eq("id", user?.id);
-
-      // Award XP based on quiz score
-      let earnedXP = 0;
-      if (quizScore && quizScore.total > 0) {
-        earnedXP = calculateQuizXP(quizScore.score, quizScore.total);
-        if (earnedXP > 0 && user?.id) {
-          // Fetch current XP then add
-          const { data: prof } = await supabase
-            .from("profiles")
-            .select("xp")
-            .eq("id", user.id)
-            .single();
-          const currentXP = prof?.xp || 0;
-          await supabase
-            .from("profiles")
-            .update({ xp: currentXP + earnedXP })
-            .eq("id", user.id);
-        }
-      }
-
-      setCompletedStats({
-        ikCount: countsRef.current.ik,
-        vaultCount: countsRef.current.vault,
-        total: countsRef.current.total,
-        earnedXP,
+    if (!dbSettingsApplied.current && Object.keys(dbSettings).length > 0) {
+      dbSettingsApplied.current = true;
+      setSessionCounts((prev) => {
+        const merged = { ...dbSettings, ...prev };
+        saveLocalSessionCounts(merged);
+        return merged;
       });
-      if (quizScore) setQuizResult(quizScore);
-      setPhase("complete");
-      setSessionComplete(true);
-    },
-    [sessionData, user, supabase]
-  );
-
-  const onFlashcardsComplete = useCallback(() => {
-    if (ikWordsRef.current.length >= 3) {
-      setPhase("quiz");
-    } else {
-      finalizeSession();
     }
-  }, [finalizeSession]);
+  }, [dbSettings]);
 
-  const handleAction = useCallback(
-    async (action: "know" | "dont_know" | "vault") => {
-      // Guard: prevent double-processing during async operations
-      if (processing) return;
+  // Adjust session count (+ / -)
+  const adjustSessionCount = useCallback(
+    (folderId: string, delta: number) => {
+      const currentVal = sessionCounts[folderId] ?? 10;
+      const nextVal = Math.min(Math.max(5, currentVal + delta), 40);
+      
+      setSessionCounts((prev) => {
+        const next = { ...prev, [folderId]: nextVal };
+        saveLocalSessionCounts(next);
+        return next;
+      });
 
-      const currentPos = posRef.current;
-      const current = queue[currentPos];
-      if (!current || !user) return;
-
-      setProcessing(true);
-
-      try {
-        // Persist session word
-        if (sessionData) {
-          const { error: swErr } = await supabase
-            .from("session_words")
-            .insert({
-              id: generateId(),
-              session_id: sessionData.id,
-              user_id: user.id,
-              word_id: current.id,
-              action,
-            });
-          if (swErr)
-            console.error("session_words insert failed:", swErr.message);
-        }
-
-        const { data: existing } = await supabase
-          .from("user_progress")
-          .select(
-            "id, repetitions, ease_factor, interval, times_incorrect, times_correct"
-          )
-          .eq("user_id", user.id)
-          .eq("word_id", current.id)
-          .single();
-
-        if (action === "know") {
-          setIkCount((c) => c + 1);
-          countsRef.current = {
-            ...countsRef.current,
-            ik: countsRef.current.ik + 1,
-          };
-          ikWordsRef.current = [...ikWordsRef.current, current];
-          setIkWords([...ikWordsRef.current]);
-
-          if (existing) {
-            const newReps = (existing.repetitions || 0) + 1;
-            const newInterval = Math.max(
-              1,
-              Math.round(
-                (existing.interval || 1) * (existing.ease_factor || 2.5)
-              )
-            );
-            const newEase = Math.max(
-              1.3,
-              (existing.ease_factor || 2.5) + 0.1
-            );
-            const nextReview = new Date();
-            nextReview.setDate(nextReview.getDate() + newInterval);
-            await supabase
-              .from("user_progress")
-              .update({
-                repetitions: newReps,
-                ease_factor: newEase,
-                interval: newInterval,
-                next_review_at: nextReview.toISOString(),
-                last_reviewed_at: new Date().toISOString(),
-                times_correct: (existing.times_correct || 0) + 1,
-                status: "mastered",
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", existing.id);
-          } else {
-            const nextReview = new Date();
-            nextReview.setDate(nextReview.getDate() + 1);
-            await supabase.from("user_progress").insert({
-              id: generateId(),
-              user_id: user.id,
-              word_id: current.id,
-              status: "mastered",
-              repetitions: 1,
-              interval: 1,
-              next_review_at: nextReview.toISOString(),
-              last_reviewed_at: new Date().toISOString(),
-              times_correct: 1,
-            });
-          }
-
-          // Remove from queue
-          setQueue((q) => {
-            const updated = q.filter((_, i) => i !== currentPos);
-            if (currentPos >= updated.length && updated.length > 0) {
-              setPos(0);
-              posRef.current = 0;
-            }
-            if (updated.length === 0) {
-              onFlashcardsComplete();
-            }
-            return updated;
-          });
-        } else if (action === "vault") {
-          setVaultCount((c) => c + 1);
-          countsRef.current = {
-            ...countsRef.current,
-            vault: countsRef.current.vault + 1,
-          };
-
-          // Check if already in vault before inserting
-          const { data: existingVault } = await supabase
-            .from("memory_vault")
-            .select("word_id")
-            .eq("user_id", user.id)
-            .eq("word_id", current.id)
-            .maybeSingle();
-
-          if (!existingVault) {
-            const { error: vErr } = await supabase
-              .from("memory_vault")
-              .insert({
-                id: generateId(),
-                user_id: user.id,
-                word_id: current.id,
-              });
-            if (vErr)
-              console.error("memory_vault insert failed:", vErr.message);
-          }
-
-          // Remove from queue
-          setQueue((q) => {
-            const updated = q.filter((_, i) => i !== currentPos);
-            if (currentPos >= updated.length && updated.length > 0) {
-              setPos(0);
-              posRef.current = 0;
-            }
-            if (updated.length === 0) {
-              onFlashcardsComplete();
-            }
-            return updated;
-          });
-        } else if (action === "dont_know") {
-          idkCountRef.current++;
-
-          // Re-insert this word at a random position ahead in the queue
-          setQueue((q) => {
-            const updated = [...q];
-            updated.splice(currentPos, 1);
-            if (updated.length === 0) return updated;
-            const insertAt = Math.min(
-              currentPos + 1 + Math.floor(Math.random() * Math.max(1, 3)),
-              updated.length
-            );
-            updated.splice(insertAt, 0, current);
-            return updated;
-          });
-          // pos stays the same — next card is the next word in queue
-        }
-      } finally {
-        setProcessing(false);
+      if (user) {
+        const merged = { ...dbSettings, ...sessionCounts, [folderId]: nextVal };
+        updateSettings.mutate(merged);
       }
     },
-    [
-      processing,
-      queue,
-      user,
-      supabase,
-      sessionData,
-      onFlashcardsComplete,
-      setIkWords,
-    ]
+    [user, dbSettings, sessionCounts, updateSettings]
   );
 
-  if (loading || sessionLoading) {
+  // ============ RECOMMENDATION LOGIC ============
+  const recommendation = (() => {
+    if (Object.keys(folderStats).length === 0) return FOLDERS[0];
+    
+    // Pick the folder with lowest mastered % that is not completed yet
+    let best = FOLDERS[0];
+    let minPct = 101;
+
+    for (const folder of FOLDERS) {
+      const stats = folderStats[folder.id];
+      if (stats && stats.remaining > 0) {
+        const pct = (stats.mastered / folder.totalCount) * 100;
+        if (pct < minPct) {
+          minPct = pct;
+          best = folder;
+        }
+      }
+    }
+    return best;
+  })();
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="text-[14px] text-outline">
-          Preparing your session...
-        </div>
+      <div className="min-h-screen bg-surface flex items-center justify-center dark:bg-[#0a0a0b]">
+        <div className="text-[13px] font-bold text-outline animate-pulse">Loading Learn Hub...</div>
       </div>
     );
   }
-
-  if (phase === "quiz") {
-    return (
-      <Quiz
-        words={ikWords}
-        onComplete={(score, total) => {
-          finalizeSession({ score, total });
-        }}
-      />
-    );
-  }
-
-  if (sessionComplete && completedStats) {
-    const { ikCount, vaultCount, total, earnedXP } = completedStats;
-
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center px-4">
-        <div className="w-full max-w-sm text-center">
-          <div className="card-surface p-8">
-            <div className="flex justify-center mb-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/10">
-                <CheckCircle2 size={24} className="text-secondary" />
-              </div>
-            </div>
-            <h2 className="font-display text-[22px] font-semibold text-on-surface mb-1">
-              Session complete
-            </h2>
-            <p className="text-[14px] text-outline mb-6">
-              You reviewed {total} words
-            </p>
-
-            {earnedXP > 0 && (
-              <div className="rounded-xl bg-tertiary/8 p-4 mb-4">
-                <p className="text-[13px] text-outline mb-1">XP Earned</p>
-                <p className="font-display text-[28px] font-bold text-tertiary">
-                  +{earnedXP} XP
-                </p>
-                <p className="text-[12px] text-outline mt-1">
-                  {earnedXP >= 50
-                    ? "Perfect! Maximum XP!"
-                    : earnedXP >= 35
-                      ? "Great work!"
-                      : earnedXP >= 20
-                        ? "Good effort!"
-                        : "Keep going!"}
-                </p>
-              </div>
-            )}
-
-            {quizResult && (
-              <div className="rounded-xl bg-primary/8 p-4 mb-4">
-                <p className="text-[13px] text-outline mb-1">Quiz Score</p>
-                <p className="font-display text-[28px] font-bold text-primary">
-                  {quizResult.score}/{quizResult.total}
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              <div className="rounded-xl bg-secondary/8 p-3">
-                <p className="font-display text-[20px] font-bold text-secondary">
-                  {ikCount}
-                </p>
-                <p className="text-[11px] text-outline">I Know</p>
-              </div>
-              <div className="rounded-xl bg-surface-container-low p-3">
-                <p className="font-display text-[20px] font-bold text-on-surface">
-                  {total - ikCount - vaultCount}
-                </p>
-                <p className="text-[11px] text-outline">Still learning</p>
-              </div>
-              <div className="rounded-xl bg-tertiary/8 p-3">
-                <p className="font-display text-[20px] font-bold text-tertiary">
-                  {vaultCount}
-                </p>
-                <p className="text-[11px] text-outline">Vaulted</p>
-              </div>
-            </div>
-
-            <Link
-              href="/progress"
-              className="block w-full h-12 rounded-xl bg-primary text-[14px] font-medium text-on-primary text-center leading-[48px] transition-all hover:bg-primary-hover"
-            >
-              View Progress
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const current = queue[pos];
-  if (!current) return null;
 
   return (
-    <div className="min-h-screen bg-surface">
-      <div className="section-wrap pt-6 pb-12">
+    <div className="min-h-screen bg-surface dark:bg-[#0a0a0b] transition-colors duration-300">
+      <div className="section-wrap pt-6 pb-16">
+        
+        {/* Navigation back */}
         <div className="flex items-center justify-between mb-6">
           <Link
             href="/progress"
-            className="flex items-center gap-1.5 text-[13px] text-outline hover:text-on-surface transition-colors"
+            className="flex items-center gap-1.5 text-[12.5px] font-bold text-outline hover:text-on-surface transition-colors"
           >
             <ArrowLeft size={14} />
-            Exit
+            Dashboard
           </Link>
-          <span className="text-[13px] text-outline">
-            {ikCount + vaultCount} / {totalWords} done
-          </span>
         </div>
 
-        <ProgressBar
-          current={ikCount + vaultCount}
-          total={totalWords}
-          showPercentage={false}
-          color="primary"
-        />
+        {/* Title */}
+        <div className="mb-8">
+          <h1 className="font-display text-[26px] font-black text-on-surface dark:text-white tracking-tight">
+            Learning Paths
+          </h1>
+          <p className="text-[14px] text-outline/80 dark:text-white/50">
+            Select a pathway to expand your verbal inventory.
+          </p>
+        </div>
 
-        <div className="mt-6">
-          <Flashcard
-            key={current.id}
-            word={current}
-            onAction={handleAction}
-            disabled={processing}
-          />
+        {/* Dynamic Study Recommendation Banner */}
+        {recommendation && (
+          <div className="mb-8 p-5 rounded-[22px] border border-primary/20 bg-primary/[0.04] dark:border-[#60a5fa]/20 dark:bg-[#60a5fa]/[0.02] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-[#60a5fa]/10 dark:text-[#60a5fa]">
+                <Sparkles size={16} />
+              </div>
+              <div className="space-y-0.5">
+                <h4 className="text-[13.5px] font-bold text-on-surface dark:text-white leading-normal">
+                  Today&apos;s Study Pick
+                </h4>
+                <p className="text-[12px] text-outline dark:text-white/60">
+                  Focus on <strong className="text-primary dark:text-[#60a5fa]">{recommendation.name}</strong> to balance your vocabulary velocity today.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => router.push(`/learn/${recommendation.id}`)}
+              className="h-9 px-4 rounded-xl bg-primary text-[12.5px] font-bold text-on-primary flex items-center gap-1.5 hover:opacity-95 active:scale-[0.98] dark:bg-[#60a5fa] dark:text-[#0c1929] transition-all"
+            >
+              <Play size={11} className="fill-current" />
+              Study Now
+            </button>
+          </div>
+        )}
+
+        {/* Pathway cards */}
+        <div className="space-y-5">
+          {FOLDERS.map((folder) => {
+            const Icon = folder.icon;
+            const count = sessionCounts[folder.id] ?? 10;
+            const stats = folderStats[folder.id];
+            
+            const total = folder.totalCount;
+            const mastered = stats?.mastered || 0;
+            const vaulted = stats?.vaulted || 0;
+            const remaining = stats ? stats.remaining : total;
+
+            const daysToCover = remaining > 0 ? Math.ceil(remaining / count) : 0;
+            const masteredPct = (mastered / total) * 100;
+            const vaultedPct = (vaulted / total) * 100;
+            const remainingPct = 100 - masteredPct - vaultedPct;
+
+            // Strict visual system matching color identities:
+            // Vocabulary (Words): Blue, Homonyms: Emerald, Idioms: Amber
+            const colorThemes = {
+              primary: {
+                border: "border-indigo-500/10 hover:border-indigo-500/30 dark:border-white/[0.04] dark:hover:border-indigo-500/30",
+                badgeBg: "bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/10 dark:text-[#60a5fa]",
+                badgeColor: "text-indigo-600 dark:text-[#60a5fa]",
+                barMastered: "bg-indigo-500 dark:bg-[#60a5fa]",
+                barVaulted: "bg-[#fbbf24]",
+                difficulty: "Basic & Advanced",
+              },
+              secondary: {
+                border: "border-emerald-500/10 hover:border-emerald-500/30 dark:border-white/[0.04] dark:hover:border-emerald-500/30",
+                badgeBg: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/10 dark:text-[#34d399]",
+                badgeColor: "text-emerald-600 dark:text-[#34d399]",
+                barMastered: "bg-emerald-500 dark:bg-[#34d399]",
+                barVaulted: "bg-[#fbbf24]",
+                difficulty: "Precision Pairs",
+              },
+              tertiary: {
+                border: "border-amber-500/10 hover:border-amber-500/30 dark:border-white/[0.04] dark:hover:border-amber-500/30",
+                badgeBg: "bg-amber-500/10 text-amber-600 dark:bg-amber-500/10 dark:text-[#fbbf24]",
+                badgeColor: "text-amber-600 dark:text-[#fbbf24]",
+                barMastered: "bg-amber-500 dark:bg-[#fbbf24]",
+                barVaulted: "bg-indigo-500 dark:bg-[#60a5fa]",
+                difficulty: "Cultural Idioms",
+              },
+            }[folder.color as "primary" | "secondary" | "tertiary"];
+
+            const isDone = remaining === 0;
+
+            return (
+              <div
+                key={folder.id}
+                className={`card-surface p-6 border transition-all duration-200 ${colorThemes.border} flex flex-col justify-between`}
+              >
+                {/* Header Row */}
+                <div className="flex items-start gap-4 mb-5">
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${colorThemes.badgeBg}`}
+                  >
+                    <Icon size={20} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h3 className="font-display text-[17px] font-bold text-on-surface dark:text-white truncate">
+                        {folder.name}
+                      </h3>
+                      <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border border-transparent ${colorThemes.badgeBg}`}>
+                        {colorThemes.difficulty}
+                      </span>
+                    </div>
+                    <p className="text-[13px] text-outline/80 dark:text-white/50 mb-4">
+                      {folder.description}
+                    </p>
+
+                    {/* Progress Bar Group */}
+                    <div className="space-y-1.5">
+                      <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden flex dark:bg-white/[0.03]">
+                        <div
+                          className={`${colorThemes.barMastered} h-full transition-all`}
+                          style={{ width: `${masteredPct}%` }}
+                        />
+                        <div
+                          className={`${colorThemes.barVaulted} h-full transition-all`}
+                          style={{ width: `${vaultedPct}%` }}
+                        />
+                        <div
+                          className="bg-outline-variant/35 dark:bg-white/[0.04] h-full transition-all"
+                          style={{ width: `${remainingPct}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] font-bold text-outline/70 dark:text-white/40">
+                        <span className={colorThemes.badgeColor}>{mastered} mastered</span>
+                        <span className="text-[#b45309] dark:text-[#fbbf24]">{vaulted} vaulted</span>
+                        <span>{remaining} remaining</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Controls */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-t border-outline-variant/10 pt-4 dark:border-white/[0.03] gap-4">
+                  {/* Session size selector */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] font-bold text-outline">Session Cards:</span>
+                    <div className="flex items-center rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-1 dark:border-white/[0.04] dark:bg-white/[0.01]">
+                      <button
+                        onClick={() => adjustSessionCount(folder.id, -5)}
+                        disabled={count <= 5}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-outline hover:bg-surface-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        aria-label="Decrease session cards count"
+                      >
+                        <Minus size={12} />
+                      </button>
+                      <span className="w-8 text-center text-[13px] font-extrabold text-on-surface dark:text-white">
+                        {count}
+                      </span>
+                      <button
+                        onClick={() => adjustSessionCount(folder.id, 5)}
+                        disabled={count >= 40}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-outline hover:bg-surface-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        aria-label="Increase session cards count"
+                      >
+                        <Plus size={12} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-4">
+                    {daysToCover > 0 && (
+                      <span className="text-[11px] font-semibold text-outline/80 dark:text-white/35 flex items-center gap-1">
+                        <Info size={11} />
+                        ~{daysToCover} sessions left
+                      </span>
+                    )}
+                    <button
+                      onClick={() => router.push(`/learn/${folder.id}`)}
+                      disabled={isDone}
+                      className="h-10 px-5 rounded-xl bg-primary text-[13px] font-bold text-on-primary hover:opacity-95 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 dark:bg-[#60a5fa] dark:text-[#0c1929]"
+                    >
+                      <Play size={12} className="fill-current" />
+                      Start Study
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

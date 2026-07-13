@@ -36,13 +36,11 @@ export default function SignupPage() {
       return;
     }
 
-    // If user is already confirmed (email verification off), go to onboarding
     if (data.session) {
       router.push("/onboarding");
       return;
     }
 
-    // Email verification is on — show check your email
     setSuccess(true);
     setLoading(false);
   };
@@ -58,18 +56,18 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center px-4">
+      <div className="min-h-screen bg-surface dark:bg-[#0a0a0b] flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <div className="card-surface p-8">
-            <p className="font-display text-[20px] font-semibold text-on-surface mb-2">
+            <p className="font-display text-[20px] font-semibold text-on-surface dark:text-white mb-2">
               Check your email
             </p>
-            <p className="text-[14px] text-outline mb-6">
+            <p className="text-[14px] text-outline dark:text-white/50 mb-6">
               We sent a verification link to <strong>{email}</strong>. Click the link to activate your account.
             </p>
             <Link
               href="/login"
-              className="text-[14px] text-primary font-medium hover:underline"
+              className="text-[14px] text-primary font-medium hover:underline dark:text-[#60a5fa]"
             >
               Back to sign in
             </Link>
@@ -80,30 +78,28 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-surface dark:bg-[#0a0a0b] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
-        {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-primary text-[15px] font-bold text-on-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-[15px] font-bold text-on-primary dark:bg-[#60a5fa] dark:text-[#0c1929]">
               V
             </div>
-            <span className="font-display text-[20px] font-medium text-on-surface">
+            <span className="font-display text-[20px] font-medium text-on-surface dark:text-white">
               Vocab Mania
             </span>
           </Link>
-          <h1 className="font-display text-[24px] font-semibold text-on-surface mb-1">
+          <h1 className="font-display text-[24px] font-semibold text-on-surface dark:text-white mb-1">
             Create your account
           </h1>
-          <p className="text-[14px] text-outline">
+          <p className="text-[14px] text-outline dark:text-white/50">
             Start learning vocabulary with science
           </p>
         </div>
 
-        {/* Google OAuth */}
         <button
           onClick={handleGoogleSignup}
-          className="w-full h-12 rounded-xl border border-outline-variant/40 text-[14px] font-medium text-on-surface transition-all hover:bg-surface-hover active:scale-[0.98] flex items-center justify-center gap-3 mb-4"
+          className="w-full h-12 rounded-xl border border-outline-variant/40 text-[14px] font-medium text-on-surface transition-all hover:bg-surface-hover active:scale-[0.98] flex items-center justify-center gap-3 mb-4 dark:border-white/[0.1] dark:text-white dark:hover:bg-white/[0.06]"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -114,14 +110,12 @@ export default function SignupPage() {
           Continue with Google
         </button>
 
-        {/* Divider */}
         <div className="flex items-center gap-3 my-4">
-          <div className="flex-1 h-px bg-outline-variant/40" />
-          <span className="text-[12px] text-outline">or</span>
-          <div className="flex-1 h-px bg-outline-variant/40" />
+          <div className="flex-1 h-px bg-outline-variant/40 dark:bg-white/[0.08]" />
+          <span className="text-[12px] text-outline dark:text-white/40">or</span>
+          <div className="flex-1 h-px bg-outline-variant/40 dark:bg-white/[0.08]" />
         </div>
 
-        {/* Email form */}
         <form onSubmit={handleEmailSignup} className="space-y-3">
           <input
             type="text"
@@ -129,7 +123,7 @@ export default function SignupPage() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
-            className="w-full h-12 px-4 rounded-xl border border-outline-variant/40 text-[14px] text-on-surface placeholder:text-outline bg-surface transition-colors focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+            className="w-full h-12 px-4 rounded-xl border border-outline-variant/40 text-[14px] text-on-surface placeholder:text-outline bg-surface transition-colors focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-white/[0.1] dark:text-white dark:placeholder:text-white/30 dark:bg-white/[0.04] dark:focus:border-[#60a5fa]"
           />
           <input
             type="email"
@@ -137,7 +131,7 @@ export default function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full h-12 px-4 rounded-xl border border-outline-variant/40 text-[14px] text-on-surface placeholder:text-outline bg-surface transition-colors focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+            className="w-full h-12 px-4 rounded-xl border border-outline-variant/40 text-[14px] text-on-surface placeholder:text-outline bg-surface transition-colors focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-white/[0.1] dark:text-white dark:placeholder:text-white/30 dark:bg-white/[0.04] dark:focus:border-[#60a5fa]"
           />
           <div className="relative">
             <input
@@ -147,35 +141,34 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full h-12 px-4 pr-12 rounded-xl border border-outline-variant/40 text-[14px] text-on-surface placeholder:text-outline bg-surface transition-colors focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+              className="w-full h-12 px-4 pr-12 rounded-xl border border-outline-variant/40 text-[14px] text-on-surface placeholder:text-outline bg-surface transition-colors focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-white/[0.1] dark:text-white dark:placeholder:text-white/30 dark:bg-white/[0.04] dark:focus:border-[#60a5fa]"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors dark:text-white/40 dark:hover:text-white"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
 
           {error && (
-            <p className="text-[13px] text-error">{error}</p>
+            <p className="text-[13px] text-error dark:text-[#f87171]">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 rounded-xl bg-primary text-[14px] font-medium text-on-primary transition-all hover:bg-primary-hover active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full h-12 rounded-xl bg-primary text-[14px] font-medium text-on-primary transition-all hover:bg-primary-hover active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 dark:bg-[#60a5fa] dark:text-[#0c1929] dark:hover:bg-[#60a5fa]/90"
           >
             {loading ? "Creating account..." : "Create account"}
             {!loading && <ArrowRight size={16} />}
           </button>
         </form>
 
-        {/* Links */}
-        <p className="mt-6 text-center text-[13px] text-outline">
+        <p className="mt-6 text-center text-[13px] text-outline dark:text-white/50">
           Already have an account?{" "}
-          <Link href="/login" className="text-primary font-medium hover:underline">
+          <Link href="/login" className="text-primary font-medium hover:underline dark:text-[#60a5fa]">
             Sign in
           </Link>
         </p>
